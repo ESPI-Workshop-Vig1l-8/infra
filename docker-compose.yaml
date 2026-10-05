@@ -21,30 +21,23 @@ services:
       COUCHDB_PASSWORD: ${COUCHDB_PASSWORD}
     
   backend:
-    build:
-      context: https://github.com/ESPI-Workshop-Vig1l-8/backend.git#main
-    image: sentinel/backend:main
+    image: golang@sha256:44391f36c74531fec7cce36984c878b0e35206796269d6c5cd2f2c8338669fc0
+    # build: src/build/backend (embedded sqlite)
     volumes:
       - backend-data:/var/lib/backend
     networks:
       - history--backend
-      - frontend--backend
+      - dashboard--backend
       - mqtt--backend
       - vision--backend
 
-  frontend:
+  dashboard:
     image: node@sha256:0a7108bf6c7bf5de370ffb1a3ed6be93d405b43ff159f681a8d18c0e2bc2e402
-    # TODO: switch to build once dashboard has a Dockerfile
-    # build:
-    #   context: https://github.com/ESPI-Workshop-Vig1l-8/dashboard.git#main
     networks:
-      - frontend--backend
+      - dashboard--backend
 
   ia-vision:
     image: python@sha256:d9368b3a5ac59afea7b5d4f2e2aea0941dbf9fdee9c369c5bec00b98244bc929
-    # TODO: switch to build once IA_Vision has a Dockerfile
-    # build:
-    #   context: https://github.com/ESPI-Workshop-Vig1l-8/IA_Vision.git#main
     volumes:
       - vision-models:/models:ro
       - vision-cache:/root/.cache
@@ -53,9 +46,6 @@ services:
 
   ia-prediction:
     image: python@sha256:d9368b3a5ac59afea7b5d4f2e2aea0941dbf9fdee9c369c5bec00b98244bc929
-    # TODO: switch to build once IA_Predictions has a Dockerfile
-    # build:
-    #   context: https://github.com/ESPI-Workshop-Vig1l-8/IA_Predictions.git#main
     volumes:
       - prediction-models:/models
       - prediction-cache:/root/.cache
@@ -71,7 +61,7 @@ services:
 networks:
   history--prediction:
   history--backend:
-  frontend--backend:
+  dashboard--backend:
   mqtt--backend:
   mqtt--sensors:
   vision--backend:
