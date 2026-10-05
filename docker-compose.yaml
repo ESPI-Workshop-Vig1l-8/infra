@@ -17,8 +17,8 @@ services:
       - history--prediction
       - history--backend
     environment:
-      - COUCHDB_USER: ${COUCHDB_USER}
-      - COUCHDB_PASSWORD: ${COUCHDB_PASSWORD}
+      COUCHDB_USER: ${COUCHDB_USER}
+      COUCHDB_PASSWORD: ${COUCHDB_PASSWORD}
     
   backend:
     image: golang@sha256:44391f36c74531fec7cce36984c878b0e35206796269d6c5cd2f2c8338669fc0
