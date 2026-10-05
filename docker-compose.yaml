@@ -27,19 +27,17 @@ services:
       - backend-data:/var/lib/backend
     networks:
       - history--backend
-      - frontend--backend
+      - dashboard--backend
       - mqtt--backend
       - vision--backend
 
-  frontend:
+  dashboard:
     image: node@sha256:0a7108bf6c7bf5de370ffb1a3ed6be93d405b43ff159f681a8d18c0e2bc2e402
-    # build: src/build/frontend
     networks:
-      - frontend--backend
+      - dashboard--backend
 
   ia-vision:
     image: python@sha256:d9368b3a5ac59afea7b5d4f2e2aea0941dbf9fdee9c369c5bec00b98244bc929
-    # build: src/build/ia/vision
     volumes:
       - vision-models:/models:ro
       - vision-cache:/root/.cache
@@ -48,7 +46,6 @@ services:
 
   ia-prediction:
     image: python@sha256:d9368b3a5ac59afea7b5d4f2e2aea0941dbf9fdee9c369c5bec00b98244bc929
-    # build: src/build/ia/prediction
     volumes:
       - prediction-models:/models
       - prediction-cache:/root/.cache
@@ -64,7 +61,7 @@ services:
 networks:
   history--prediction:
   history--backend:
-  frontend--backend:
+  dashboard--backend:
   mqtt--backend:
   mqtt--sensors:
   vision--backend:
