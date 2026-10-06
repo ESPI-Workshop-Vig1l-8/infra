@@ -59,7 +59,7 @@ services:
     networks:
       - dashboard--backend
     ports:
-      - 10443:8080
+      - 127.0.0.1:10443:8080   # localhost only: the dashboard is used on the server PC
     environment:
       # IA_Vision runs on the host (USB webcam): MJPEG stream proxied under /vision/
       VISION_UPSTREAM: ${VISION_UPSTREAM:-http://host.docker.internal:8000}
