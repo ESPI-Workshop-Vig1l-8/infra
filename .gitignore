@@ -1,3 +1,5 @@
 # secrets
 .env
 config/mosquitto/passwd
+certs/
+config/mosquitto/certs/

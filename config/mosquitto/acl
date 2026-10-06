@@ -1,0 +1,20 @@
+# Topic layout: vigil8/<device_id>/{telemetry,event,status,cmd}
+# See the data format in README.md.
+
+# Sensor nodes: the MQTT username is the device id (e.g. VIG1L-8-NODE04),
+# so each node can only publish its own data and read its own commands.
+pattern write vigil8/%u/telemetry
+pattern write vigil8/%u/event
+pattern write vigil8/%u/status
+pattern read vigil8/%u/cmd
+
+# Backend: reads every node and sends commands.
+user backend
+topic read vigil8/+/telemetry
+topic read vigil8/+/event
+topic read vigil8/+/status
+topic write vigil8/+/cmd
+
+# Prediction service: live telemetry only.
+user ia-prediction
+topic read vigil8/+/telemetry

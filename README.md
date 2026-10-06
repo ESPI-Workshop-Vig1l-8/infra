@@ -5,7 +5,80 @@ Docker Compose stack for the Sentinel-X "PC Serveur Local": Mosquitto (MQTT brok
 ## Setup
 
 ```bash
-cp .env.example .env   # then fill in the values
+cp .env.example .env                 # then fill in the passwords
+./scripts/gen-certs.sh 192.168.10.1  # TLS: local CA + broker certificate for the server IP
+./scripts/mqtt-passwd.sh             # MQTT accounts from .env -> config/mosquitto/passwd
+docker compose up -d
+```
+
+- `gen-certs.sh` keeps the CA key in `certs/ca/` (never mounted in a container) and puts `ca.crt`, `server.crt` and `server.key` in `config/mosquitto/certs/`. Copy `certs/ca/ca.crt` into the firmware's `include/secrets.h`. Re-run it if the server IP changes; the CA is reused.
+- After editing MQTT accounts in `.env`, re-run `mqtt-passwd.sh` and `docker compose restart mqtt-broker`.
+- `history-db-init` runs on every `up` and sets up CouchDB (idempotent). The backend waits for it.
+- Certificates, `passwd` and `.env` are git-ignored: never commit them.
+
+## Security
+
+| Component | Rule |
+|---|---|
+| MQTT, sensor nodes | MQTTS only (TLS 1.2+, port `18883` on the host), username/password per node. ACL: a node can only publish on `vigil8/<its id>/…` and only read its own `cmd` topic |
+| MQTT, services | Plain port `1883` reachable only on the Docker networks. `backend` reads all nodes and writes commands; `ia-prediction` reads telemetry only |
+| CouchDB | Authentication required on every request. Published on `127.0.0.1:5984` only. User `backend` (role `writer`) is the only one allowed to write; user `ia` (role `reader`) is read-only; design docs need the admin |
+| Logs | Mosquitto logs to stdout, rotated by Docker (3 × 10 MB) |
+
+## Data flow and format
+
+```
+ESP32 ──MQTTS──► Mosquitto ──► backend ──► CouchDB (telemetry, events)
+                     └───────► ia-prediction (live)      ▲
+                                                         └── training export (IA_Predictions)
+```
+
+The backend is the only writer to CouchDB. It stores each MQTT message unchanged and adds `_id` (`<device_id>:<received_at>`, sorted by time) and `received_at` (server time, epoch ms).
+
+| Topic | Direction | Content |
+|---|---|---|
+| `vigil8/<device_id>/telemetry` | node → server, every 2 s | sensor readings |
+| `vigil8/<device_id>/event` | node → server, immediately | PIR state change |
+| `vigil8/<device_id>/status` | node → server, retained | online/offline (LWT) |
+| `vigil8/<device_id>/cmd` | server → node | alert LED (strobe) |
+
+Telemetry (`v: 1`):
+
+```json
+{
+  "v": 1,
+  "device_id": "VIG1L-8-NODE04",
+  "seq": 18342,
+  "uptime_ms": 36684012,
+  "temp_c": 25.8,
+  "hum_pct": 61.5,
+  "gas_mv": 259,
+  "pir": false,
+  "pir_events": 0,
+  "status": { "dht": "ok", "gas_warm": true, "env_warn": false, "rssi": -58 }
+}
+```
+
+- `temp_c` / `hum_pct` are `null` and `status.dht` is `"error"` when the DHT22 does not answer.
+- `gas_mv` is the MQ-2 analog output in mV (not calibrated, not ppm). `status.gas_warm` is `false` during the 3-minute warm-up.
+- `seq` counts messages per topic (telemetry and events have their own counter): a gap means lost messages, a restart from 0 with a small `uptime_ms` means a reboot.
+- `pir_events` counts motion detections since the previous telemetry message.
+- `status.env_warn` is `true` while the node's local fixed ceiling (temperature or gas) is exceeded; it only drives the node's warning LED, anomaly detection is done by the AI.
+
+Event: `{"v":1,"device_id":"…","seq":18343,"uptime_ms":36685120,"type":"motion","state":true}`
+Status: `{"online":true,"fw":"0.2.0","ip":"192.168.10.20"}` (the broker publishes `{"online":false}` if the node disappears)
+Command: `{"strobe":true,"duration_s":8}` makes the node's environment LED blink (server alert, 1–60 s)
+
+Annotations (database `events`, written through the backend) mark test periods so they can be excluded from training and used to evaluate the model:
+
+```json
+{ "_id": "annotation:1791274000000", "type": "annotation", "device_id": "VIG1L-8-NODE04", "start": 1791274000000, "end": 1791274120000, "label": "gas_test", "note": "lighter, not lit, 5 cm" }
+```
+
+Graphs: the `telemetry` design doc has one view per metric (`temp_c`, `hum_pct`, `gas_mv`) keyed by `[device_id, year, month, day, hour, minute]` (UTC) with `_stats`. `group_level=6` gives per-minute stats, `5` per hour:
+
+```
+GET /telemetry/_design/telemetry/_view/gas_mv?group_level=6&startkey=["VIG1L-8-NODE04",2026,10,6]&endkey=["VIG1L-8-NODE04",2026,10,6,{}]
 ```
 
 ## Building the service images

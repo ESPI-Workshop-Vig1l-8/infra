@@ -4,12 +4,18 @@ services:
     volumes:
       - ./config/mosquitto:/mosquitto/config:ro
       - mqtt-data:/mosquitto/data
-      - mqtt-log:/mosquitto/log
     networks:
       - mqtt--sensors
       - mqtt--backend
+      - mqtt--prediction
     ports:
-      - 18883:8883
+      - 18883:8883   # MQTTS for the sensor nodes (TLS)
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: "3"
+    restart: unless-stopped
 
   history-db:
     image: couchdb@sha256:8cf5f8442585c346d2717ff0ad95605731d2f19f67b8367840baa8d3b24ebc31
@@ -18,9 +24,31 @@ services:
     networks:
       - history--prediction
       - history--backend
+    ports:
+      - 127.0.0.1:5984:5984   # local only: training export and admin
     environment:
       COUCHDB_USER: ${COUCHDB_USER}
       COUCHDB_PASSWORD: ${COUCHDB_PASSWORD}
+    restart: unless-stopped
+
+  # One-shot job: databases, users, access rules and design docs (idempotent)
+  history-db-init:
+    image: couchdb@sha256:8cf5f8442585c346d2717ff0ad95605731d2f19f67b8367840baa8d3b24ebc31
+    entrypoint: ["sh", "/couchdb-init.sh"]
+    volumes:
+      - ./scripts/couchdb-init.sh:/couchdb-init.sh:ro
+      - ./config/couchdb/design:/config/design:ro
+    networks:
+      - history--backend
+    environment:
+      COUCHDB_URL: http://history-db:5984
+      COUCHDB_USER: ${COUCHDB_USER}
+      COUCHDB_PASSWORD: ${COUCHDB_PASSWORD}
+      COUCHDB_BACKEND_PASSWORD: ${COUCHDB_BACKEND_PASSWORD}
+      COUCHDB_IA_PASSWORD: ${COUCHDB_IA_PASSWORD}
+    depends_on:
+      - history-db
+    restart: "no"
 
   dashboard:
     image: node@sha256:0a7108bf6c7bf5de370ffb1a3ed6be93d405b43ff159f681a8d18c0e2bc2e402
@@ -38,6 +66,20 @@ services:
     image: sentinel/backend:main
     volumes:
       - backend-data:/var/lib/backend
+    environment:
+      SQLITE_PATH: /var/lib/backend/sentinel.db
+      MQTT_BROKER: tcp://mqtt-broker:1883
+      MQTT_USERNAME: backend
+      MQTT_PASSWORD: ${MQTT_BACKEND_PASSWORD}
+      COUCHDB_URL: http://history-db:5984
+      COUCHDB_USER: backend
+      COUCHDB_PASSWORD: ${COUCHDB_BACKEND_PASSWORD}
+    depends_on:
+      mqtt-broker:
+        condition: service_started
+      history-db-init:
+        condition: service_completed_successfully
+    restart: unless-stopped
     networks:
       - history--backend
       - dashboard--backend
@@ -63,8 +105,16 @@ services:
     volumes:
       - prediction-models:/models
       - prediction-cache:/root/.cache
+    environment:
+      MQTT_BROKER: tcp://mqtt-broker:1883
+      MQTT_USERNAME: ia-prediction
+      MQTT_PASSWORD: ${MQTT_PREDICTION_PASSWORD}
+      COUCHDB_URL: http://history-db:5984
+      COUCHDB_USER: ia
+      COUCHDB_PASSWORD: ${COUCHDB_IA_PASSWORD}
     networks:
       - history--prediction
+      - mqtt--prediction
 
   # reverse-proxy:
   #   image: nginx:latest
@@ -78,11 +128,11 @@ networks:
   dashboard--backend:
   mqtt--backend:
   mqtt--sensors:
+  mqtt--prediction:
   vision--backend:
 
 volumes:
   mqtt-data:
-  mqtt-log:
   history-data:
   backend-data:
   vision-models:

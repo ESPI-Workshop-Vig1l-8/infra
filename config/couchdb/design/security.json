@@ -1,0 +1,5 @@
+{
+  "_id": "_design/security",
+  "language": "javascript",
+  "validate_doc_update": "function (newDoc, oldDoc, userCtx) { if (userCtx.roles.indexOf('_admin') === -1 && userCtx.roles.indexOf('writer') === -1) { throw({ forbidden: 'Only the backend can write to this database.' }); } }"
+}
