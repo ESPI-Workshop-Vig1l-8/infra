@@ -50,30 +50,31 @@ services:
       - history-db
     restart: "no"
 
+  # Static dashboard + reverse proxy (/api, /ws) to the backend: the only
+  # HTTP entry point, the backend itself is not published.
   dashboard:
-    image: node@sha256:0a7108bf6c7bf5de370ffb1a3ed6be93d405b43ff159f681a8d18c0e2bc2e402
-    # TODO: switch to build once dashboard has a Dockerfile
-    # build:
-    #   context: https://github.com/ESPI-Workshop-Vig1l-8/dashboard.git#main
+    build:
+      context: https://github.com/ESPI-Workshop-Vig1l-8/dashboard.git#main
+    image: sentinel/dashboard:main
     networks:
       - dashboard--backend
     ports:
-      - 10443:80
+      - 10443:8080
+    restart: unless-stopped
     
   backend:
     build:
       context: https://github.com/ESPI-Workshop-Vig1l-8/backend.git#main
     image: sentinel/backend:main
-    volumes:
-      - backend-data:/var/lib/backend
     environment:
-      SQLITE_PATH: /var/lib/backend/sentinel.db
       MQTT_BROKER: tcp://mqtt-broker:1883
       MQTT_USERNAME: backend
       MQTT_PASSWORD: ${MQTT_BACKEND_PASSWORD}
       COUCHDB_URL: http://history-db:5984
       COUCHDB_USER: backend
       COUCHDB_PASSWORD: ${COUCHDB_BACKEND_PASSWORD}
+      API_OPERATOR_TOKEN: ${API_OPERATOR_TOKEN}
+      API_SERVICE_TOKEN: ${API_SERVICE_TOKEN}
     depends_on:
       mqtt-broker:
         condition: service_started
@@ -85,6 +86,7 @@ services:
       - dashboard--backend
       - mqtt--backend
       - vision--backend
+      - prediction--backend
 
   ia-vision:
     image: python@sha256:d9368b3a5ac59afea7b5d4f2e2aea0941dbf9fdee9c369c5bec00b98244bc929
@@ -94,6 +96,9 @@ services:
     volumes:
       - vision-models:/models:ro
       - vision-cache:/root/.cache
+    environment:
+      BACKEND_URL: http://backend:5000
+      API_SERVICE_TOKEN: ${API_SERVICE_TOKEN}
     networks:
       - vision--backend
 
@@ -112,9 +117,12 @@ services:
       COUCHDB_URL: http://history-db:5984
       COUCHDB_USER: ia
       COUCHDB_PASSWORD: ${COUCHDB_IA_PASSWORD}
+      BACKEND_URL: http://backend:5000
+      API_SERVICE_TOKEN: ${API_SERVICE_TOKEN}
     networks:
       - history--prediction
       - mqtt--prediction
+      - prediction--backend
 
   # reverse-proxy:
   #   image: nginx:latest
@@ -130,11 +138,11 @@ networks:
   mqtt--sensors:
   mqtt--prediction:
   vision--backend:
+  prediction--backend:
 
 volumes:
   mqtt-data:
   history-data:
-  backend-data:
   vision-models:
   vision-cache:
   prediction-models:
