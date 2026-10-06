@@ -97,10 +97,17 @@ docker compose up -d
 |-----------------|-------------------|-------------------------|
 | `backend`       | `backend`         | `sentinel/backend:main` |
 | `dashboard`     | `dashboard`       | `sentinel/dashboard:main` |
-| `ia-vision`     | `IA_Vision`       | not built yet (no Dockerfile) |
-| `ia-prediction` | `IA_Predictions`  | not built yet (no Dockerfile) |
+| `ia-prediction` | `IA_Predictions`  | `sentinel/ia-prediction:main` |
 
-When a service repository gets a `Dockerfile` at its root, uncomment the `build:` block of that service in `docker-compose.yaml`.
+## AI services
+
+- **ia-prediction** (container): live Isolation Forest on the MQTT telemetry, sends `warning` / `confirmed` alerts to the backend. The model lives on the `prediction-models` volume; to retrain on the real data stored in CouchDB:
+  ```bash
+  docker compose run --rm ia-prediction python entrainement.py --source couchdb
+  docker compose restart ia-prediction
+  ```
+  Until then, the model shipped in the repository is used (trained on simulated data).
+- **IA_Vision** (not a container): runs on the host, next to the USB webcam (Docker on Windows/macOS cannot access webcams). Configure its `.env` with `BACKEND_URL=http://127.0.0.1:10443` and `API_SERVICE_TOKEN`, then `python main.py`. Its MJPEG stream (port `8000`) is shown by the dashboard through `/vision/` (`VISION_UPSTREAM`, default `http://host.docker.internal:8000`); it checks the dashboard's access key itself. Open port 8000 only to the Docker bridge if the host firewall is strict.
 
 ### Access to the private repositories
 
