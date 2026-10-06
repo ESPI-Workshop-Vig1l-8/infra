@@ -34,7 +34,8 @@ cat > "$tmp/server.ext" <<EOF
 basicConstraints = CA:FALSE
 keyUsage = digitalSignature, keyEncipherment
 extendedKeyUsage = serverAuth
-subjectAltName = IP:$SERVER_IP, IP:127.0.0.1, DNS:mqtt-broker, DNS:localhost
+# DNS:$SERVER_IP too: the ESP32's mbedTLS 2.x only matches DNS names, not IP SANs
+subjectAltName = IP:$SERVER_IP, DNS:$SERVER_IP, IP:127.0.0.1, DNS:mqtt-broker, DNS:localhost
 EOF
 openssl x509 -req -in "$tmp/server.csr" -days 825 -sha256 \
   -CA "$CA_DIR/ca.crt" -CAkey "$CA_DIR/ca.key" -CAcreateserial \
