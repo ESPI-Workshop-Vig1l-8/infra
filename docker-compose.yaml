@@ -8,6 +8,8 @@ services:
     networks:
       - mqtt--sensors
       - mqtt--backend
+    ports:
+      - 18883:8883
 
   history-db:
     image: couchdb@sha256:8cf5f8442585c346d2717ff0ad95605731d2f19f67b8367840baa8d3b24ebc31
@@ -19,10 +21,18 @@ services:
     environment:
       COUCHDB_USER: ${COUCHDB_USER}
       COUCHDB_PASSWORD: ${COUCHDB_PASSWORD}
+
+  dashboard:
+    image: node@sha256:0a7108bf6c7bf5de370ffb1a3ed6be93d405b43ff159f681a8d18c0e2bc2e402
+    networks:
+      - dashboard--backend
+    ports:
+      -10443:80
     
   backend:
-    image: golang@sha256:44391f36c74531fec7cce36984c878b0e35206796269d6c5cd2f2c8338669fc0
-    # build: src/build/backend (embedded sqlite)
+    build:
+      context: https://github.com/ESPI-Workshop-Vig1l-8/backend.git#main
+    image: sentinel/backend:main
     volumes:
       - backend-data:/var/lib/backend
     networks:
@@ -30,11 +40,6 @@ services:
       - dashboard--backend
       - mqtt--backend
       - vision--backend
-
-  dashboard:
-    image: node@sha256:0a7108bf6c7bf5de370ffb1a3ed6be93d405b43ff159f681a8d18c0e2bc2e402
-    networks:
-      - dashboard--backend
 
   ia-vision:
     image: python@sha256:d9368b3a5ac59afea7b5d4f2e2aea0941dbf9fdee9c369c5bec00b98244bc929
