@@ -14,6 +14,7 @@ docker compose up -d
 - `gen-certs.sh` keeps the CA key in `certs/ca/` (never mounted in a container) and puts `ca.crt`, `server.crt` and `server.key` in `config/mosquitto/certs/`. Copy `certs/ca/ca.crt` into the firmware's `include/secrets.h`. Re-run it if the server IP changes; the CA is reused.
 - After editing MQTT accounts in `.env`, re-run `mqtt-passwd.sh` and `docker compose restart mqtt-broker`.
 - `history-db-init` runs on every `up` and sets up CouchDB (idempotent). The backend waits for it.
+- Dashboard: `http://<server>:10443`. The access key is `API_OPERATOR_TOKEN` (full access) or `API_SERVICE_TOKEN` (read-only). The AI services use `API_SERVICE_TOKEN` to `POST /api/v1/alerts` on `http://backend:5000` (API reference in the `backend` README).
 - Certificates, `passwd` and `.env` are git-ignored: never commit them.
 
 ## Security
@@ -23,6 +24,7 @@ docker compose up -d
 | MQTT, sensor nodes | MQTTS only (TLS 1.2+, port `18883` on the host), username/password per node. ACL: a node can only publish on `vigil8/<its id>/…` and only read its own `cmd` topic |
 | MQTT, services | Plain port `1883` reachable only on the Docker networks. `backend` reads all nodes and writes commands; `ia-prediction` reads telemetry only |
 | CouchDB | Authentication required on every request. Published on `127.0.0.1:5984` only. User `backend` (role `writer`) is the only one allowed to write; user `ia` (role `reader`) is read-only; design docs need the admin |
+| HTTP | Only the dashboard's nginx is published (`10443`); it serves the app and proxies `/api` and `/ws` to the backend, which is not published. Every API call needs a token: operator (dashboard, commands) or service (AI: read + alerts) |
 | Logs | Mosquitto logs to stdout, rotated by Docker (3 × 10 MB) |
 
 ## Data flow and format
@@ -94,7 +96,7 @@ docker compose up -d
 | Service         | Source repository | Image                   |
 |-----------------|-------------------|-------------------------|
 | `backend`       | `backend`         | `sentinel/backend:main` |
-| `dashboard`     | `dashboard`       | not built yet (no Dockerfile) |
+| `dashboard`     | `dashboard`       | `sentinel/dashboard:main` |
 | `ia-vision`     | `IA_Vision`       | not built yet (no Dockerfile) |
 | `ia-prediction` | `IA_Predictions`  | not built yet (no Dockerfile) |
 
