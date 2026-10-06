@@ -40,7 +40,7 @@ The backend is the only writer to CouchDB. It stores each MQTT message unchanged
 | `vigil8/<device_id>/telemetry` | node → server, every 2 s | sensor readings |
 | `vigil8/<device_id>/event` | node → server, immediately | PIR state change |
 | `vigil8/<device_id>/status` | node → server, retained | online/offline (LWT) |
-| `vigil8/<device_id>/cmd` | server → node | buzzer / strobe |
+| `vigil8/<device_id>/cmd` | server → node | alert LED (strobe) |
 
 Telemetry (`v: 1`):
 
@@ -55,7 +55,7 @@ Telemetry (`v: 1`):
   "gas_mv": 259,
   "pir": false,
   "pir_events": 0,
-  "status": { "dht": "ok", "gas_warm": true, "rssi": -58 }
+  "status": { "dht": "ok", "gas_warm": true, "env_warn": false, "rssi": -58 }
 }
 ```
 
@@ -63,10 +63,11 @@ Telemetry (`v: 1`):
 - `gas_mv` is the MQ-2 analog output in mV (not calibrated, not ppm). `status.gas_warm` is `false` during the 3-minute warm-up.
 - `seq` counts messages per topic (telemetry and events have their own counter): a gap means lost messages, a restart from 0 with a small `uptime_ms` means a reboot.
 - `pir_events` counts motion detections since the previous telemetry message.
+- `status.env_warn` is `true` while the node's local fixed ceiling (temperature or gas) is exceeded; it only drives the node's warning LED, anomaly detection is done by the AI.
 
 Event: `{"v":1,"device_id":"…","seq":18343,"uptime_ms":36685120,"type":"motion","state":true}`
 Status: `{"online":true,"fw":"0.2.0","ip":"192.168.10.20"}` (the broker publishes `{"online":false}` if the node disappears)
-Command: `{"buzzer":true,"strobe":true,"duration_s":8}`
+Command: `{"strobe":true,"duration_s":8}` makes the node's environment LED blink (server alert, 1–60 s)
 
 Annotations (database `events`, written through the backend) mark test periods so they can be excluded from training and used to evaluate the model:
 
