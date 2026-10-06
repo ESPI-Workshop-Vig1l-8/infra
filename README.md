@@ -21,7 +21,7 @@ docker compose up -d
 | Service         | Source repository | Image                   |
 |-----------------|-------------------|-------------------------|
 | `backend`       | `backend`         | `sentinel/backend:main` |
-| `frontend`      | `dashboard`       | not built yet (no Dockerfile) |
+| `dashboard`     | `dashboard`       | not built yet (no Dockerfile) |
 | `ia-vision`     | `IA_Vision`       | not built yet (no Dockerfile) |
 | `ia-prediction` | `IA_Predictions`  | not built yet (no Dockerfile) |
 
