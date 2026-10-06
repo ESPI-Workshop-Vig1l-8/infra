@@ -27,7 +27,7 @@ services:
     networks:
       - dashboard--backend
     ports:
-      -10443:80
+      - 10443:80
     
   backend:
     build:
