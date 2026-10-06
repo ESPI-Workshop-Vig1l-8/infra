@@ -1,0 +1,18 @@
+{
+  "_id": "_design/telemetry",
+  "language": "javascript",
+  "views": {
+    "temp_c": {
+      "map": "function (doc) { if (typeof doc.temp_c !== 'number' || !doc.received_at) return; var d = new Date(doc.received_at); emit([doc.device_id, d.getUTCFullYear(), d.getUTCMonth() + 1, d.getUTCDate(), d.getUTCHours(), d.getUTCMinutes()], doc.temp_c); }",
+      "reduce": "_stats"
+    },
+    "hum_pct": {
+      "map": "function (doc) { if (typeof doc.hum_pct !== 'number' || !doc.received_at) return; var d = new Date(doc.received_at); emit([doc.device_id, d.getUTCFullYear(), d.getUTCMonth() + 1, d.getUTCDate(), d.getUTCHours(), d.getUTCMinutes()], doc.hum_pct); }",
+      "reduce": "_stats"
+    },
+    "gas_mv": {
+      "map": "function (doc) { if (typeof doc.gas_mv !== 'number' || !doc.received_at) return; var d = new Date(doc.received_at); emit([doc.device_id, d.getUTCFullYear(), d.getUTCMonth() + 1, d.getUTCDate(), d.getUTCHours(), d.getUTCMinutes()], doc.gas_mv); }",
+      "reduce": "_stats"
+    }
+  }
+}
