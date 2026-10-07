@@ -23,8 +23,7 @@ services:
     networks:
       - history--prediction
       - history--backend
-    ports:
-      - 127.0.0.1:5984:5984   # local only: training export and admin
+    # not published: the backend API (training CSV export) and the AI reach it on the Docker networks
     environment:
       COUCHDB_USER: ${COUCHDB_USER}
       COUCHDB_PASSWORD: ${COUCHDB_PASSWORD}
