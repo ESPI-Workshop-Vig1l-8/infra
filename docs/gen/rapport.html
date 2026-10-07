@@ -145,7 +145,6 @@
     <tr><th>Source → destination</th><th>Port / protocole</th><th>Chiffrement</th><th>Authentification</th><th>Exposition</th></tr>
     <tr><td>ESP32 → broker</td><td>18883/tcp (→ 8883) MQTT</td><td>TLS 1.2+, CA locale</td><td>compte du nœud + ACL</td><td>réseau de table</td></tr>
     <tr><td>Navigateur → dashboard</td><td>10443/tcp HTTP</td><td>— (boucle locale)</td><td>clé d'accès (jeton API)</td><td><code>127.0.0.1</code> uniquement</td></tr>
-    <tr><td>Export / admin → CouchDB</td><td>5984/tcp HTTP</td><td>— (boucle locale)</td><td>utilisateur CouchDB</td><td><code>127.0.0.1</code> uniquement</td></tr>
     <tr><td>backend ↔ broker</td><td>1883/tcp MQTT</td><td>réseau Docker interne</td><td>compte <code>backend</code></td><td>non publié</td></tr>
     <tr><td>backend → CouchDB</td><td>5984/tcp HTTP</td><td>réseau Docker interne</td><td>utilisateur <code>backend</code> (écriture)</td><td>non publié</td></tr>
     <tr><td>ia-prediction → CouchDB</td><td>5984/tcp HTTP</td><td>réseau Docker interne</td><td>utilisateur <code>ia</code> (lecture seule)</td><td>non publié</td></tr>
@@ -155,7 +154,7 @@
   <h2>3.3 Isolation</h2>
   <ul>
     <li><strong>Réseau de table</strong> : hotspot dédié du serveur (WPA2) ; aucun autre groupe ne partage ce réseau.</li>
-    <li><strong>Surface exposée</strong> : un seul port sur le réseau (MQTTS 18883), protégé par TLS, mot de passe et ACL. Le dashboard et la base n'écoutent que sur <code>127.0.0.1</code>.</li>
+    <li><strong>Surface exposée</strong> : un seul port sur le réseau (MQTTS 18883), protégé par TLS, mot de passe et ACL. Sur l'hôte, seul le dashboard est publié, et uniquement sur <code>127.0.0.1</code> : la base n'est joignable que depuis les conteneurs du backend et de l'IA. L'export CSV d'entraînement passe par l'API (le backend lit la base et sert le fichier).</li>
     <li><strong>Réseaux Docker par paire de services</strong> : chaque conteneur ne voit que les services dont il a besoin (section 5).</li>
     <li><span class="status s-plan">PRÉVU</span> Lier le port 18883 à l'adresse du hotspot (<code>192.168.10.1:18883</code>) plutôt qu'à toutes les interfaces : Docker contourne le pare-feu de l'hôte pour les ports publiés.</li>
   </ul>
@@ -227,7 +226,7 @@
   <table>
     <tr><th>Service</th><th>Image / technologie</th><th>Rôle</th><th>Utilisateur</th><th>Exposition</th></tr>
     <tr><td><code>mqtt-broker</code></td><td>Mosquitto 2.1 (digest épinglé)</td><td>Broker MQTT : TLS 8883 pour les nœuds, 1883 interne</td><td>mosquitto (1883)</td><td>18883 → 8883</td></tr>
-    <tr><td><code>history-db</code></td><td>CouchDB 3.5 (digest épinglé)</td><td>Base documentaire : <code>telemetry</code>, <code>events</code></td><td>couchdb (5984)</td><td>127.0.0.1:5984</td></tr>
+    <tr><td><code>history-db</code></td><td>CouchDB 3.5 (digest épinglé)</td><td>Base documentaire : <code>telemetry</code>, <code>events</code></td><td>couchdb (5984)</td><td>— (réseaux internes)</td></tr>
     <tr><td><code>history-db-init</code></td><td>CouchDB (curl)</td><td>Job au démarrage : bases, comptes, droits, vues</td><td>couchdb (5984)</td><td>—</td></tr>
     <tr><td><code>backend</code></td><td>Go 1.26, binaire statique</td><td>Ingestion MQTT, API REST, WebSocket</td><td>sentinel (10001)</td><td>—</td></tr>
     <tr><td><code>dashboard</code></td><td>React 19 + Vite, nginx non privilégié</td><td>Interface, proxy <code>/api</code>, <code>/ws</code>, <code>/vision/</code></td><td>nginx (101)</td><td>127.0.0.1:10443</td></tr>
@@ -344,7 +343,7 @@ docker compose up -d                  # puis hors ligne, sur le hotspot</code></
     <tr><td>Connexion anonyme au broker</td><td><code>allow_anonymous false</code>, mots de passe hachés</td><td class="c"><span class="status s-ok">FAIT</span></td></tr>
     <tr><td>Usurpation d'un nœud</td><td>Un compte par nœud ; ACL <code>vigil8/%u/…</code> ; contrôle <code>device_id</code> = topic dans le backend</td><td class="c"><span class="status s-ok">FAIT</span></td></tr>
     <tr><td>Injection de commandes vers un nœud</td><td>Seul le compte <code>backend</code> peut publier sur <code>…/cmd</code> ; côté API, jeton opérateur requis</td><td class="c"><span class="status s-ok">FAIT</span></td></tr>
-    <tr><td>Accès à la base</td><td>Authentification obligatoire, écoute sur <code>127.0.0.1</code>, rôles écrivain / lecteur, validation d'écriture</td><td class="c"><span class="status s-ok">FAIT</span></td></tr>
+    <tr><td>Accès à la base</td><td>Authentification obligatoire, port non publié sur l'hôte (réseaux Docker du backend et de l'IA uniquement), rôles écrivain / lecteur, validation d'écriture</td><td class="c"><span class="status s-ok">FAIT</span></td></tr>
     <tr><td>Accès à l'API</td><td>Jetons opérateur / service (comparaison en temps constant), aucun secret par défaut</td><td class="c"><span class="status s-ok">FAIT</span></td></tr>
     <tr><td>Déni de service applicatif</td><td>20 requêtes/s par IP, corps 16 Ko, délais HTTP, messages MQTT 4 Ko, 4 spectateurs vidéo max</td><td class="c"><span class="status s-ok">FAIT</span></td></tr>
     <tr><td>Accès au dashboard</td><td>Écoute sur <code>127.0.0.1</code> ; CSP stricte, <code>X-Frame-Options</code>, <code>nosniff</code></td><td class="c"><span class="status s-ok">FAIT</span></td></tr>
@@ -429,8 +428,8 @@ PermitRootLogin no
     <li>segments de moins de 60 mesures.</li>
   </ul>
   <p>
-    Les données viennent de CouchDB (<code>entrainement.py --source couchdb</code>) ou du bouton « Exporter CSV » du dashboard,
-    qui applique exactement les mêmes règles.
+    Les données viennent du bouton « Exporter CSV » du dashboard (l'API lit la base et sert le fichier, pour un entraînement sur un autre PC),
+    ou directement de CouchDB depuis le conteneur (<code>docker compose run --rm ia-prediction python entrainement.py --source couchdb</code>) : les deux appliquent exactement les mêmes règles.
   </p>
   <h3>Détection en temps réel</h3>
   <ul>
