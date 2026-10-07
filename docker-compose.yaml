@@ -57,13 +57,12 @@ services:
     image: sentinel/dashboard:main
     networks:
       - dashboard--backend
+      - dashboard--vision
     ports:
       - 127.0.0.1:10443:8080   # localhost only: the dashboard is used on the server PC
     environment:
-      # IA_Vision runs on the host (USB webcam): MJPEG stream proxied under /vision/
-      VISION_UPSTREAM: ${VISION_UPSTREAM:-http://host.docker.internal:8000}
-    extra_hosts:
-      - host.docker.internal:host-gateway
+      # MJPEG stream of IA_Vision, proxied under /vision/ (resolved at request time)
+      VISION_UPSTREAM: ${VISION_UPSTREAM:-http://ia-vision:8000}
     restart: unless-stopped
     
   backend:
@@ -90,11 +89,32 @@ services:
       - dashboard--backend
       - mqtt--backend
       - prediction--backend
+      - vision--backend
 
-  # IA_Vision is not a container: it runs on the host next to the USB webcam
-  # (Docker on Windows/macOS cannot access webcams). It reaches the backend
-  # through the dashboard (http://127.0.0.1:10443) and the dashboard proxies
-  # its stream (VISION_UPSTREAM above). See the IA_Vision README.
+  # YOLO intrusion detection on the USB webcam: alerts to the backend, MJPEG
+  # stream for the dashboard. LINUX ONLY: the webcam is passed with `devices`,
+  # which Docker Desktop (Windows/macOS) does not support. On those systems,
+  # remove this service (or `docker compose up -d --scale ia-vision=0`), run
+  # IA_Vision on the host and set VISION_UPSTREAM (see README).
+  ia-vision:
+    build:
+      context: https://github.com/ESPI-Workshop-Vig1l-8/IA_Vision.git#main
+    image: sentinel/ia-vision:main
+    devices:
+      - ${VISION_CAMERA:-/dev/video0}:/dev/video0
+    group_add:
+      - ${VIDEO_GID:-44}   # gid of the host's "video" group (getent group video)
+    environment:
+      CAMERA: "0"
+      BACKEND_URL: http://backend:5000
+      API_SERVICE_TOKEN: ${API_SERVICE_TOKEN}
+      DEVICE_ID: ${VISION_DEVICE_ID:-VIG1L-8-NODE04}
+    networks:
+      - vision--backend
+      - dashboard--vision
+    depends_on:
+      - backend
+    restart: unless-stopped
 
   # Live anomaly detection (Isolation Forest) on the readings stored in CouchDB
   ia-prediction:
@@ -133,6 +153,8 @@ networks:
   mqtt--backend:
   mqtt--sensors:
   prediction--backend:
+  vision--backend:
+  dashboard--vision:
 
 volumes:
   mqtt-data:
