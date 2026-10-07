@@ -1,0 +1,28 @@
+flowchart TB
+  esp(("ESP32"))
+  cam["Webcam<br/>/dev/video0"]
+  nav["Navigateur<br/>127.0.0.1:10443"]
+  adm["Export / admin<br/>127.0.0.1:5984"]
+
+  subgraph host["PC Serveur Local — Docker Compose (conteneurs non root)"]
+    broker["mqtt-broker<br/>Mosquitto 2.1<br/>8883 TLS · 1883 interne"]
+    backend["backend<br/>Go — API REST + WebSocket"]
+    couch[("history-db<br/>CouchDB 3.5<br/>telemetry · events")]
+    init["history-db-init<br/>(job au démarrage)"]
+    pred["ia-prediction<br/>Isolation Forest"]
+    vision["ia-vision<br/>MOG2 + YOLOv8n"]
+    dash["dashboard<br/>nginx + React"]
+  end
+
+  esp -- "18883 → 8883 (TLS)" --> broker
+  broker -- "mqtt--backend · 1883" --> backend
+  backend -- "history--backend · écriture" --> couch
+  init -- "history--backend · admin" --> couch
+  pred -- "history--prediction · lecture seule (_changes)" --> couch
+  pred -- "prediction--backend · POST /alerts" --> backend
+  vision -- "vision--backend · POST /alerts, /session" --> backend
+  dash -- "dashboard--backend · /api, /ws" --> backend
+  dash -- "dashboard--vision · /vision/" --> vision
+  cam --> vision
+  nav --> dash
+  adm --> couch

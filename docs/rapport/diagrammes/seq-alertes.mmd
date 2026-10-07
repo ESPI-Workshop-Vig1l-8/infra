@@ -1,0 +1,26 @@
+sequenceDiagram
+  autonumber
+  participant C as CouchDB
+  participant P as ia-prediction
+  participant B as Backend
+  participant D as Dashboard
+  participant M as Mosquitto
+  participant E as ESP32
+  P->>C: GET telemetry/_changes (longpoll)<br/>compte « ia », lecture seule
+  C-->>P: nouvelles mesures (validées par le backend)
+  P->>P: tampon 3 s → fenêtre de 60 mesures<br/>→ 10 caractéristiques → Isolation Forest
+  alt 2 fenêtres anormales consécutives
+    P->>B: POST /api/v1/alerts level=warning (jeton service)
+    B->>C: PUT events/alert:…
+    B-)D: WebSocket « alert » (Avertissement)
+  end
+  alt 5 fenêtres anormales consécutives
+    P->>B: POST /api/v1/alerts level=confirmed
+    B->>C: PUT events/alert:…
+    B->>M: PUBLISH vigil8/VIG1L-8-NODE04/cmd {strobe, 30 s} (QoS 1)
+    M->>E: commande
+    E->>E: LED environnement clignotante
+    B-)D: WebSocket « alert » (Confirmée) + « command »
+  end
+  D->>B: POST /api/v1/alerts/{id}/ack (jeton opérateur)
+  B-)D: WebSocket « alert_ack »

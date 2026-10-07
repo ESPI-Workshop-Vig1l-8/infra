@@ -1,0 +1,16 @@
+sequenceDiagram
+  autonumber
+  participant W as Webcam
+  participant V as ia-vision
+  participant B as Backend
+  participant N as Dashboard (nginx)
+  participant U as Navigateur
+  W->>V: images 640×480
+  V->>V: MOG2 : contour > 20 000 px → YOLOv8n<br/>(classe personne, confiance ≥ 0,5)
+  V-)B: POST /api/v1/alerts warning (1re personne confirmée)
+  V-)B: POST /api/v1/alerts confirmed (présence ≥ 3 s) → LED du nœud
+  U->>N: GET /vision/stream.mjpg?token=…
+  N->>V: proxy (résolution DNS à chaque requête)
+  V->>B: GET /api/v1/session (vérification du jeton, cache 60 s)
+  B-->>V: 200 {role}
+  V-->>U: flux MJPEG (15 images/s max, encodé seulement si regardé)

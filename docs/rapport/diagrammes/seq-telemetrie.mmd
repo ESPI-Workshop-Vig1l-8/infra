@@ -1,0 +1,24 @@
+sequenceDiagram
+  autonumber
+  participant E as ESP32
+  participant M as Mosquitto
+  participant B as Backend
+  participant C as CouchDB
+  participant D as Dashboard
+  E->>M: CONNECT TLS (CA locale vérifiée)<br/>compte VIG1L-8-NODE04, LWT {online:false}
+  M-->>E: CONNACK (ACL : vigil8/VIG1L-8-NODE04/…)
+  E->>M: PUBLISH …/status {online:true} (retenu)
+  M->>B: status
+  B-)D: WebSocket « status » (nœud en ligne)
+  loop toutes les 2 s
+    E->>M: PUBLISH …/telemetry (JSON v1)
+    M->>B: telemetry
+    B->>B: validation (v1, device_id = topic, plages)<br/>+ _id + received_at
+    B-)D: WebSocket « telemetry » (temps réel)
+    B->>C: _bulk_docs (écriture par lot)
+  end
+  E->>M: PUBLISH …/event (changement d'état du PIR)
+  M->>B: event
+  B-)D: WebSocket « event »
+  B->>C: _bulk_docs
+  Note over E,M: si le nœud disparaît, Mosquitto publie le LWT {online:false}
