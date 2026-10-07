@@ -108,7 +108,8 @@ docker compose up -d
   docker compose restart ia-prediction
   ```
   Until then, the model shipped in the repository is used (trained on simulated data).
-- **IA_Vision** (not a container): runs on the host, next to the USB webcam (Docker on Windows/macOS cannot access webcams). Configure its `.env` with `BACKEND_URL=http://127.0.0.1:10443` and `API_SERVICE_TOKEN`, then `python main.py`. Its MJPEG stream (port `8000`) is shown by the dashboard through `/vision/` (`VISION_UPSTREAM`, default `http://host.docker.internal:8000`); it checks the dashboard's access key itself. Open port 8000 only to the Docker bridge if the host firewall is strict.
+- **ia-vision** (container, **Linux only**): YOLO intrusion detection on the USB webcam passed with `devices: /dev/video0`, `warning` / `confirmed` alerts to the backend, MJPEG stream shown by the dashboard under `/vision/` (protected by the access key). The YOLO weights are downloaded when the image is built, so it runs offline on the hotspot. Set `VIDEO_GID` to the gid of the host's `video` group (`getent group video`) and `VISION_CAMERA` if the webcam is not `/dev/video0` (`v4l2-ctl --list-devices`).
+  **Windows/macOS:** Docker Desktop cannot access USB webcams. Start the stack without this service (`docker compose up -d --scale ia-vision=0`), run IA_Vision on the host (`python main.py`, see its README) and set `VISION_UPSTREAM=http://<host IP>:8000` (e.g. `http://192.168.10.1:8000`).
 
 ### Repository access
 
