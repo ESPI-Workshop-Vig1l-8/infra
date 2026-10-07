@@ -109,8 +109,12 @@ docker compose up -d
   Until then, the model shipped in the repository is used (trained on simulated data).
 - **IA_Vision** (not a container): runs on the host, next to the USB webcam (Docker on Windows/macOS cannot access webcams). Configure its `.env` with `BACKEND_URL=http://127.0.0.1:10443` and `API_SERVICE_TOKEN`, then `python main.py`. Its MJPEG stream (port `8000`) is shown by the dashboard through `/vision/` (`VISION_UPSTREAM`, default `http://host.docker.internal:8000`); it checks the dashboard's access key itself. Open port 8000 only to the Docker bridge if the host firewall is strict.
 
-### Access to the private repositories
+### Repository access
 
-The repositories are private, so the machine running the build needs GitHub access. So far this has only been tested from a dev sandbox where GitHub credentials are injected automatically. On the server, the expected option is SSH: an SSH key with access to the organisation loaded in `ssh-agent`, the `context` written as `git@github.com:ESPI-Workshop-Vig1l-8/<repo>.git#main`, and `ssh: [default]` added under `build:`. To be confirmed when the server is set up.
+For this school project, the organisation's repositories are **public**, so that `docker compose build` can fetch the sources without credentials. In a real deployment they would stay **private** and the build machine would authenticate to GitHub: an SSH key (or deploy key) with read-only access loaded in `ssh-agent`, contexts written as `git@github.com:ESPI-Workshop-Vig1l-8/<repo>.git#main`, and `ssh: [default]` under `build:`.
+
+No secret is stored in the repositories: credentials live in `.env`, `config/mosquitto/passwd`, `certs/` and the firmware's `include/secrets.h`, all git-ignored.
+
+The build needs Internet access: run `docker compose build` **before** switching the PC's Wi-Fi to the table hotspot (the card can't be a hotspot and connected to another network at the same time). `docker compose up -d` then runs offline.
 
 The build cache stays in Docker after a build; `docker builder prune` clears it.
