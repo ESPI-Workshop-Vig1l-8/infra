@@ -26,6 +26,7 @@ docker compose up -d
 | MQTT, services | Plain port `1883` reachable only on the Docker networks. Only `backend` has a service account: it reads all nodes and writes commands. The AI services have no broker access |
 | CouchDB | Authentication required on every request. Not published on the host: only reachable on the Docker networks of `backend` and `ia-prediction`. User `backend` (role `writer`) is the only one allowed to write; user `ia` (role `reader`) is read-only and is how `ia-prediction` gets the live readings; design docs need the admin |
 | HTTP | Only the dashboard's nginx is published, on `127.0.0.1:10443` (not reachable from the network); it serves the app and proxies `/api` and `/ws` to the backend, which is not published. Every API call needs a token: operator (dashboard, commands) or service (AI: read + alerts) |
+| Ports | Non-standard host ports (MQTTS `18883` instead of 8883, dashboard `10443`): automated attacks (bots, quick scans, worms) target the default ports of common services, so this keeps them out of reach and the logs quieter. It complements TLS, authentication and ACLs; it does not replace them, since a full scan (`nmap -p-`) still finds the ports |
 | Logs | Mosquitto logs to stdout, rotated by Docker (3 × 10 MB) |
 
 ## Data flow and format
