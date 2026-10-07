@@ -14,7 +14,7 @@ docker compose up -d
 - `gen-certs.sh` keeps the CA key in `certs/ca/` (never mounted in a container) and puts `ca.crt`, `server.crt` and `server.key` in `config/mosquitto/certs/`. Copy `certs/ca/ca.crt` into the firmware's `include/secrets.h`. Re-run it if the server IP changes; the CA is reused.
 - After editing MQTT accounts in `.env`, re-run `mqtt-passwd.sh` and `docker compose restart mqtt-broker`.
 - `history-db-init` runs on every `up` and sets up CouchDB (idempotent). The backend waits for it.
-- Dashboard: `http://<server>:10443`. The access key is `API_OPERATOR_TOKEN` (full access) or `API_SERVICE_TOKEN` (read-only). The AI services use `API_SERVICE_TOKEN` to `POST /api/v1/alerts` on `http://backend:5000` (API reference in the `backend` README).
+- Dashboard: `http://localhost:10443`, **on the server PC only** (published on `127.0.0.1`). To open it from another machine, change the `ports` line of the `dashboard` service (`10443:8080`) or use an SSH tunnel (`ssh -L 10443:127.0.0.1:10443 <server>`). The access key is `API_OPERATOR_TOKEN` (full access) or `API_SERVICE_TOKEN` (read-only). The AI services use `API_SERVICE_TOKEN` to `POST /api/v1/alerts` on `http://backend:5000` (API reference in the `backend` README).
 - Certificates, `passwd` and `.env` are git-ignored: never commit them.
 
 ## Security
@@ -24,7 +24,7 @@ docker compose up -d
 | MQTT, sensor nodes | MQTTS only (TLS 1.2+, port `18883` on the host), username/password per node. ACL: a node can only publish on `vigil8/<its id>/…` and only read its own `cmd` topic |
 | MQTT, services | Plain port `1883` reachable only on the Docker networks. `backend` reads all nodes and writes commands; `ia-prediction` reads telemetry only |
 | CouchDB | Authentication required on every request. Published on `127.0.0.1:5984` only. User `backend` (role `writer`) is the only one allowed to write; user `ia` (role `reader`) is read-only; design docs need the admin |
-| HTTP | Only the dashboard's nginx is published (`10443`); it serves the app and proxies `/api` and `/ws` to the backend, which is not published. Every API call needs a token: operator (dashboard, commands) or service (AI: read + alerts) |
+| HTTP | Only the dashboard's nginx is published, on `127.0.0.1:10443` (not reachable from the network); it serves the app and proxies `/api` and `/ws` to the backend, which is not published. Every API call needs a token: operator (dashboard, commands) or service (AI: read + alerts) |
 | Logs | Mosquitto logs to stdout, rotated by Docker (3 × 10 MB) |
 
 ## Data flow and format
@@ -97,13 +97,24 @@ docker compose up -d
 |-----------------|-------------------|-------------------------|
 | `backend`       | `backend`         | `sentinel/backend:main` |
 | `dashboard`     | `dashboard`       | `sentinel/dashboard:main` |
-| `ia-vision`     | `IA_Vision`       | not built yet (no Dockerfile) |
-| `ia-prediction` | `IA_Predictions`  | not built yet (no Dockerfile) |
+| `ia-prediction` | `IA_Predictions`  | `sentinel/ia-prediction:main` |
 
-When a service repository gets a `Dockerfile` at its root, uncomment the `build:` block of that service in `docker-compose.yaml`.
+## AI services
 
-### Access to the private repositories
+- **ia-prediction** (container): live Isolation Forest on the MQTT telemetry, sends `warning` / `confirmed` alerts to the backend. The model lives on the `prediction-models` volume; to retrain on the real data stored in CouchDB:
+  ```bash
+  docker compose run --rm ia-prediction python entrainement.py --source couchdb
+  docker compose restart ia-prediction
+  ```
+  Until then, the model shipped in the repository is used (trained on simulated data).
+- **IA_Vision** (not a container): runs on the host, next to the USB webcam (Docker on Windows/macOS cannot access webcams). Configure its `.env` with `BACKEND_URL=http://127.0.0.1:10443` and `API_SERVICE_TOKEN`, then `python main.py`. Its MJPEG stream (port `8000`) is shown by the dashboard through `/vision/` (`VISION_UPSTREAM`, default `http://host.docker.internal:8000`); it checks the dashboard's access key itself. Open port 8000 only to the Docker bridge if the host firewall is strict.
 
-The repositories are private, so the machine running the build needs GitHub access. So far this has only been tested from a dev sandbox where GitHub credentials are injected automatically. On the server, the expected option is SSH: an SSH key with access to the organisation loaded in `ssh-agent`, the `context` written as `git@github.com:ESPI-Workshop-Vig1l-8/<repo>.git#main`, and `ssh: [default]` added under `build:`. To be confirmed when the server is set up.
+### Repository access
+
+For this school project, the organisation's repositories are **public**, so that `docker compose build` can fetch the sources without credentials. In a real deployment they would stay **private** and the build machine would authenticate to GitHub: an SSH key (or deploy key) with read-only access loaded in `ssh-agent`, contexts written as `git@github.com:ESPI-Workshop-Vig1l-8/<repo>.git#main`, and `ssh: [default]` under `build:`.
+
+No secret is stored in the repositories: credentials live in `.env`, `config/mosquitto/passwd`, `certs/` and the firmware's `include/secrets.h`, all git-ignored.
+
+The build needs Internet access: run `docker compose build` **before** switching the PC's Wi-Fi to the table hotspot (the card can't be a hotspot and connected to another network at the same time). `docker compose up -d` then runs offline.
 
 The build cache stays in Docker after a build; `docker builder prune` clears it.

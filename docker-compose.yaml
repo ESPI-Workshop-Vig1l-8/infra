@@ -59,7 +59,12 @@ services:
     networks:
       - dashboard--backend
     ports:
-      - 10443:8080
+      - 127.0.0.1:10443:8080   # localhost only: the dashboard is used on the server PC
+    environment:
+      # IA_Vision runs on the host (USB webcam): MJPEG stream proxied under /vision/
+      VISION_UPSTREAM: ${VISION_UPSTREAM:-http://host.docker.internal:8000}
+    extra_hosts:
+      - host.docker.internal:host-gateway
     restart: unless-stopped
     
   backend:
@@ -85,32 +90,22 @@ services:
       - history--backend
       - dashboard--backend
       - mqtt--backend
-      - vision--backend
       - prediction--backend
 
-  ia-vision:
-    image: python@sha256:d9368b3a5ac59afea7b5d4f2e2aea0941dbf9fdee9c369c5bec00b98244bc929
-    # TODO: switch to build once IA_Vision has a Dockerfile
-    # build:
-    #   context: https://github.com/ESPI-Workshop-Vig1l-8/IA_Vision.git#main
-    volumes:
-      - vision-models:/models:ro
-      - vision-cache:/root/.cache
-    environment:
-      BACKEND_URL: http://backend:5000
-      API_SERVICE_TOKEN: ${API_SERVICE_TOKEN}
-    networks:
-      - vision--backend
+  # IA_Vision is not a container: it runs on the host next to the USB webcam
+  # (Docker on Windows/macOS cannot access webcams). It reaches the backend
+  # through the dashboard (http://127.0.0.1:10443) and the dashboard proxies
+  # its stream (VISION_UPSTREAM above). See the IA_Vision README.
 
+  # Live anomaly detection (Isolation Forest) on the MQTT telemetry
   ia-prediction:
-    image: python@sha256:d9368b3a5ac59afea7b5d4f2e2aea0941dbf9fdee9c369c5bec00b98244bc929
-    # TODO: switch to build once IA_Predictions has a Dockerfile
-    # build:
-    #   context: https://github.com/ESPI-Workshop-Vig1l-8/IA_Predictions.git#main
+    build:
+      context: https://github.com/ESPI-Workshop-Vig1l-8/IA_Predictions.git#main
+    image: sentinel/ia-prediction:main
     volumes:
       - prediction-models:/models
-      - prediction-cache:/root/.cache
     environment:
+      FICHIER_MODELE: /models/modele_anomalies.joblib
       MQTT_BROKER: tcp://mqtt-broker:1883
       MQTT_USERNAME: ia-prediction
       MQTT_PASSWORD: ${MQTT_PREDICTION_PASSWORD}
@@ -123,6 +118,10 @@ services:
       - history--prediction
       - mqtt--prediction
       - prediction--backend
+    depends_on:
+      - mqtt-broker
+      - backend
+    restart: unless-stopped
 
   # reverse-proxy:
   #   image: nginx:latest
@@ -137,13 +136,9 @@ networks:
   mqtt--backend:
   mqtt--sensors:
   mqtt--prediction:
-  vision--backend:
   prediction--backend:
 
 volumes:
   mqtt-data:
   history-data:
-  vision-models:
-  vision-cache:
   prediction-models:
-  prediction-cache:
