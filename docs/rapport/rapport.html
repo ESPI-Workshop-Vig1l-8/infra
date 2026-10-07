@@ -1,0 +1,555 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>Workshop2026-M1-G&lt;n&gt; — Rapport d'ingénierie technique — Sentinel-X</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- ======================================================================= -->
+<section class="cover">
+  <div class="top">
+    <div class="org">EPSI — Workshop national Bac+4 · Octobre 2026</div>
+    <h1 class="title">Mission Sentinel-X</h1>
+    <div class="subtitle">Rapport d'ingénierie technique — consortium VIG1L-8 (AetherCorp)</div>
+    <table>
+      <tr><th style="width:32%">Groupe</th><td><span class="tbd">G&lt;n&gt;</span></td></tr>
+      <tr><th>Nœud</th><td>VIG1L-8-NODE04 (ESP32)</td></tr>
+      <tr><th>Option matérielle</th><td>A — PC Serveur Local sur Raspberry Pi 5 (développé et testé sur un PC Linux, même pile Docker)</td></tr>
+      <tr><th>Dépôts</th><td>github.com/ESPI-Workshop-Vig1l-8 : <code>infra</code>, <code>backend</code>, <code>dashboard</code>, <code>firmware</code>, <code>IA_Vision</code>, <code>IA_Predictions</code></td></tr>
+    </table>
+    <h3>Équipe</h3>
+    <table>
+      <tr><th style="width:32%">Membre</th><th>Filière</th><th>Rôle principal</th></tr>
+      <tr><td><span class="tbd">Julien …</span></td><td>INFRA</td><td>Infrastructure, réseau, sécurité, intégration</td></tr>
+      <tr><td><span class="tbd">Rem Tshimanga</span></td><td>IA</td><td>Vision (YOLO) et maintenance prédictive</td></tr>
+      <tr><td><span class="tbd">lquatre (nom à compléter)</span></td><td>DEV</td><td>Backend, dashboard, firmware (versions initiales)</td></tr>
+      <tr><td><span class="tbd">…</span></td><td><span class="tbd">…</span></td><td><span class="tbd">…</span></td></tr>
+    </table>
+  </div>
+  <div class="foot">Document généré depuis <code>infra/docs/rapport/</code> (HTML + diagrammes) — les encadrés « À COMPLÉTER » sont à remplir après les mesures sur la cible et le pentest croisé du jeudi.</div>
+</section>
+
+<!-- ======================================================================= -->
+<section class="toc">
+  <h1>Sommaire</h1>
+  <ol>
+    <li><a href="#synthese">Synthèse</a></li>
+    <li><a href="#contexte">Contexte et choix d'architecture</a></li>
+    <li><a href="#reseau">Réseau de table</a></li>
+    <li><a href="#electronique">Électronique et firmware</a></li>
+    <li><a href="#infra">Infrastructure conteneurisée</a></li>
+    <li><a href="#flux">Séquences des échanges réseau</a></li>
+    <li><a href="#backend">Backend, API et dashboard</a></li>
+    <li><a href="#securite">Matrice de sécurité (TLS, durcissement)</a></li>
+    <li><a href="#ia">Documentation de l'IA</a></li>
+    <li><a href="#tests">Tests et validation</a></li>
+    <li><a href="#audit">Rapport d'audit post-pentest</a></li>
+    <li><a href="#limites">Limites et améliorations</a></li>
+    <li><a href="#annexes">Annexes</a></li>
+  </ol>
+
+  <h2>Conventions</h2>
+  <p>
+    <span class="status s-ok">FAIT</span> réalisé et testé ·
+    <span class="status s-plan">PRÉVU</span> décidé, à appliquer sur la cible (Raspberry Pi) ·
+    <span class="status s-todo">À COMPLÉTER</span> mesure ou résultat à reporter.
+    Les noms techniques (topics, champs JSON, variables) sont en <code>police fixe</code>.
+  </p>
+</section>
+
+<!-- ======================================================================= -->
+<section id="synthese">
+  <h1>1. Synthèse</h1>
+  <p>
+    Sentinel-X est un boîtier de surveillance autonome pour les micro-centrales d'AetherCorp. Un nœud ESP32 mesure la température,
+    l'humidité, les gaz combustibles et la présence, et transmet ses mesures en <strong>MQTT chiffré (TLS)</strong> au
+    <strong>PC Serveur Local</strong>. Celui-ci exécute, dans des conteneurs Docker isolés, le broker MQTT, la base de données,
+    l'API, le tableau de bord et deux intelligences artificielles : une <strong>détection d'intrusion par vision</strong> (webcam USB,
+    YOLOv8n) et une <strong>maintenance prédictive</strong> (Isolation Forest) qui repère les dérives avant tout seuil critique.
+  </p>
+  <div class="kpis">
+    <div class="kpi"><b>TLS 1.2+</b><span>de l'ESP32 au broker, CA locale vérifiée par le nœud</span></div>
+    <div class="kpi"><b>2 niveaux</b><span>d'alerte IA : avertissement puis confirmation (LED du nœud)</span></div>
+    <div class="kpi"><b>10 / 10</b><span>dérives lentes détectées (données simulées), 0,07 % de fausses alertes</span></div>
+    <div class="kpi"><b>37 ms</b><span>par image pour la vision (PC de développement, CPU) — objectif &lt; 100 ms</span></div>
+  </div>
+  <h2>Ce qui est livré</h2>
+  <table>
+    <tr><th>Brique</th><th>Contenu</th><th class="c">État</th></tr>
+    <tr><td>Nœud ESP32</td><td>Firmware C++ (PlatformIO) : capteurs, JSON, MQTTS, LED d'alerte, diagnostic matériel</td><td class="c"><span class="status s-ok">FAIT</span></td></tr>
+    <tr><td>Infrastructure</td><td>Docker Compose : Mosquitto, CouchDB, backend Go, dashboard, IA vision, IA prédiction ; scripts de certificats et de comptes</td><td class="c"><span class="status s-ok">FAIT</span></td></tr>
+    <tr><td>Backend / dashboard</td><td>Ingestion validée, API REST + WebSocket, historique, alertes, commandes, export CSV d'entraînement</td><td class="c"><span class="status s-ok">FAIT</span></td></tr>
+    <tr><td>IA</td><td>Vision MOG2 + YOLOv8n ; Isolation Forest entraîné sur les vraies mesures, détection en temps réel</td><td class="c"><span class="status s-ok">FAIT</span></td></tr>
+    <tr><td>Sécurité</td><td>TLS, comptes et ACL par nœud, rôles API, conteneurs non root, secrets hors dépôt</td><td class="c"><span class="status s-ok">FAIT</span></td></tr>
+    <tr><td>Durcissement hôte</td><td>Pare-feu, SSH par clés, isolation Docker sur le Raspberry Pi</td><td class="c"><span class="status s-plan">PRÉVU</span></td></tr>
+    <tr><td>Mesures sur cible, pentest</td><td>Latences sur Raspberry Pi, tests physiques, résultats du pentest croisé</td><td class="c"><span class="status s-todo">À COMPLÉTER</span></td></tr>
+  </table>
+</section>
+
+<!-- ======================================================================= -->
+<section id="contexte">
+  <h1>2. Contexte et choix d'architecture</h1>
+  <h2>2.1 Le besoin</h2>
+  <p>
+    Le sujet impose quatre piliers : <strong>Edge Computing & IoT</strong> (un microcontrôleur unique qui capte et alerte localement),
+    <strong>IA locale</strong> (vision sur webcam USB et détection prédictive sur séries temporelles, sans seuils statiques),
+    <strong>infrastructure</strong> (conteneurs résilients, réseau de table isolé) et <strong>cybersécurité</strong> (chiffrement de bout
+    en bout, durcissement, pentest croisé). L'interconnexion de toutes les briques est éliminatoire pour la démonstration.
+  </p>
+  <h2>2.2 Option matérielle</h2>
+  <p>
+    Le PC Serveur Local cible est un <strong>Raspberry Pi 5 (option A)</strong>. Il n'était pas disponible pendant le développement :
+    toute la pile a été construite et testée sur un <strong>PC Linux</strong> avec exactement les mêmes conteneurs. Toutes les images de base
+    et les images épinglées (CouchDB, Mosquitto) existent en <code>linux/arm64</code>, et PyTorch publie des paquets ARM64 :
+    la pile se construit sur le Pi sans modification. Les performances (latence de la vision en particulier) devront y être re-mesurées.
+  </p>
+  <h2>2.3 Écarts au matériel prévu</h2>
+  <table>
+    <tr><th>Prévu par le sujet</th><th>Utilisé</th><th>Raison et conséquences</th></tr>
+    <tr><td>ESP8266</td><td><strong>ESP32</strong> (DevKit)</td><td>Seul microcontrôleur disponible. Avantages : plus de broches, ADC 12 bits (ADC1 utilisable avec le Wi-Fi), pile TLS plus confortable (mbedTLS).</td></tr>
+    <tr><td>Buzzer piézoélectrique</td><td><strong>2 LED</strong> (mouvement, environnement)</td><td>Plus de buzzers disponibles. La LED environnement porte les alertes : fixe = premier avertissement local, clignotante = alerte confirmée par l'IA.</td></tr>
+    <tr><td>Écran OLED I2C</td><td>—</td><td>Plus d'écrans disponibles. L'état du nœud (IP, connexion, mesures) est visible sur le dashboard et le moniteur série.</td></tr>
+  </table>
+  <h2>2.4 Principes de conception</h2>
+  <ul>
+    <li><strong>Une seule source de vérité</strong> : toutes les données (mesures, événements, alertes, annotations) sont dans CouchDB.</li>
+    <li><strong>Un seul écrivain</strong> : seul le backend écrit en base, après validation. L'IA lit en lecture seule des données sûres.</li>
+    <li><strong>Validation à l'entrée</strong> : chaque message MQTT est vérifié (format, cohérence identifiant/topic, plages de valeurs).</li>
+    <li><strong>Moindre privilège</strong> : un compte par nœud et par service, rôles distincts, conteneurs non root, ports minimaux.</li>
+    <li><strong>Pas de secret dans le code</strong> : mots de passe, jetons et clés vivent dans des fichiers ignorés par git.</li>
+    <li><strong>Défaillances visibles</strong> : un capteur en panne envoie <code>null</code>, une coupure de série est détectée ; rien n'est masqué.</li>
+    <li><strong>Reproductible</strong> : tout se déploie avec Docker Compose et deux scripts ; les images sont construites depuis les dépôts.</li>
+  </ul>
+</section>
+
+<!-- ======================================================================= -->
+<section id="reseau">
+  <h1>3. Réseau de table</h1>
+  <h2>3.1 Plan d'adressage</h2>
+  <table>
+    <tr><th>Élément</th><th>Valeur</th><th>Justification</th></tr>
+    <tr><td>Réseau</td><td><code>192.168.10.0/24</code>, SSID <code>VIGIL8_HOTSPOT</code></td><td>Réseau dédié à la table, isolé des autres groupes</td></tr>
+    <tr><td>Sécurité Wi-Fi</td><td>WPA2-PSK, bande <strong>2,4 GHz</strong></td><td>L'ESP32 ne capte pas le 5 GHz</td></tr>
+    <tr><td>PC Serveur Local</td><td><code>192.168.10.1</code> — passerelle et DHCP</td><td>Adresse inscrite dans le certificat TLS du broker</td></tr>
+    <tr><td>Nœud ESP32</td><td><code>192.168.10.5</code> (IP fixe)</td><td>Hors de la plage DHCP : aucun conflit possible avec un autre client</td></tr>
+    <tr><td>Plage DHCP</td><td><code>192.168.10.10</code> à <code>.254</code></td><td>Clients occasionnels (aucun service ne leur est destiné)</td></tr>
+  </table>
+  <figure class="wide">
+    <img src="diagrammes/reseau.svg" alt="Schéma réseau de la table">
+    <figcaption>Figure 1 — Réseau de table : seul le port MQTTS 18883 est exposé au réseau ; le dashboard n'écoute que sur la boucle locale du serveur.</figcaption>
+  </figure>
+  <h2>3.2 Matrice des flux</h2>
+  <table>
+    <tr><th>Source → destination</th><th>Port / protocole</th><th>Chiffrement</th><th>Authentification</th><th>Exposition</th></tr>
+    <tr><td>ESP32 → broker</td><td>18883/tcp (→ 8883) MQTT</td><td>TLS 1.2+, CA locale</td><td>compte du nœud + ACL</td><td>réseau de table</td></tr>
+    <tr><td>Navigateur → dashboard</td><td>10443/tcp HTTP</td><td>— (boucle locale)</td><td>clé d'accès (jeton API)</td><td><code>127.0.0.1</code> uniquement</td></tr>
+    <tr><td>Export / admin → CouchDB</td><td>5984/tcp HTTP</td><td>— (boucle locale)</td><td>utilisateur CouchDB</td><td><code>127.0.0.1</code> uniquement</td></tr>
+    <tr><td>backend ↔ broker</td><td>1883/tcp MQTT</td><td>réseau Docker interne</td><td>compte <code>backend</code></td><td>non publié</td></tr>
+    <tr><td>backend → CouchDB</td><td>5984/tcp HTTP</td><td>réseau Docker interne</td><td>utilisateur <code>backend</code> (écriture)</td><td>non publié</td></tr>
+    <tr><td>ia-prediction → CouchDB</td><td>5984/tcp HTTP</td><td>réseau Docker interne</td><td>utilisateur <code>ia</code> (lecture seule)</td><td>non publié</td></tr>
+    <tr><td>IA → backend</td><td>5000/tcp HTTP</td><td>réseau Docker interne</td><td>jeton service</td><td>non publié</td></tr>
+    <tr><td>dashboard → ia-vision</td><td>8000/tcp MJPEG</td><td>réseau Docker interne</td><td>clé d'accès vérifiée par le backend</td><td>non publié</td></tr>
+  </table>
+  <h2>3.3 Isolation</h2>
+  <ul>
+    <li><strong>Réseau de table</strong> : hotspot dédié du serveur (WPA2) ; aucun autre groupe ne partage ce réseau.</li>
+    <li><strong>Surface exposée</strong> : un seul port sur le réseau (MQTTS 18883), protégé par TLS, mot de passe et ACL. Le dashboard et la base n'écoutent que sur <code>127.0.0.1</code>.</li>
+    <li><strong>Réseaux Docker par paire de services</strong> : chaque conteneur ne voit que les services dont il a besoin (section 5).</li>
+    <li><span class="status s-plan">PRÉVU</span> Lier le port 18883 à l'adresse du hotspot (<code>192.168.10.1:18883</code>) plutôt qu'à toutes les interfaces : Docker contourne le pare-feu de l'hôte pour les ports publiés.</li>
+  </ul>
+</section>
+
+<!-- ======================================================================= -->
+<section id="electronique">
+  <h1>4. Électronique et firmware</h1>
+  <h2>4.1 Composants</h2>
+  <table>
+    <tr><th>Composant</th><th>Mesure / rôle</th><th>Alimentation</th><th>Broche ESP32</th></tr>
+    <tr><td>DHT22</td><td>Température, humidité (1 lecture / 2 s max)</td><td>3,3 V</td><td>GPIO 4</td></tr>
+    <tr><td>MQ-2</td><td>Gaz combustibles, fumées (sortie analogique AO)</td><td>5 V (chauffe ~150 mA)</td><td>GPIO 34 (ADC1) via pont diviseur</td></tr>
+    <tr><td>HC-SR501</td><td>Présence infrarouge (sortie 3,3 V)</td><td>5 V</td><td>GPIO 14</td></tr>
+    <tr><td>LED mouvement + 220 Ω</td><td>Allumée pendant une détection du PIR</td><td>—</td><td>GPIO 19</td></tr>
+    <tr><td>LED environnement + 220 Ω</td><td>Fixe : plafond local ; clignotante : alerte IA</td><td>—</td><td>GPIO 18</td></tr>
+    <tr><td>LED intégrée</td><td>Suit le PIR</td><td>—</td><td>GPIO 2</td></tr>
+  </table>
+  <figure class="wide">
+    <img src="diagrammes/cablage.svg" alt="Schéma de câblage du nœud">
+    <figcaption>Figure 2 — Câblage du nœud VIG1L-8-NODE04 (source : <code>firmware/include/config.h</code>).</figcaption>
+  </figure>
+  <h2>4.2 Choix électroniques</h2>
+  <ul>
+    <li><strong>Pont diviseur du MQ-2</strong> : alimenté en 5 V, sa sortie AO peut atteindre 5 V alors que les entrées de l'ESP32 supportent 3,3 V. Avec 10 kΩ et 20 kΩ : <code>5 V × 20 / (10 + 20) = 3,33 V</code>. Le firmware recalcule la tension réelle (× 1,5).</li>
+    <li><strong>ADC1 (GPIO 32 à 39)</strong> : les broches de l'ADC2 ne sont plus lisibles quand le Wi-Fi est actif ; GPIO 34 est sur l'ADC1.</li>
+    <li><strong>DHT22 en 3,3 V</strong> : son signal reste compatible avec l'ESP32 sans diviseur.</li>
+    <li><strong>LED</strong> : 220 Ω en série, soit environ 6 mA sous 3,3 V, bien en dessous de la limite d'une broche.</li>
+    <li><strong>Broches évitées</strong> : 0, 2 (sauf LED intégrée), 5, 12, 15 (démarrage), 6 à 11 (mémoire flash), 34 à 39 réservées aux entrées.</li>
+    <li><strong>HC-SR501</strong> : cavalier sur H (re-déclenchable), délai Tx au minimum (~3 s), 30 s de calibration au démarrage.</li>
+  </ul>
+  <h2>4.3 Firmware</h2>
+  <p>
+    C++ avec PlatformIO (framework Arduino-ESP32 2.0.17), bibliothèques PubSubClient (MQTT), ArduinoJson 7 et DHT (Adafruit).
+    Deux environnements : <code>esp32dev</code> (firmware Sentinel-X) et <code>diagnostic</code> (test du câblage sans réseau).
+  </p>
+  <ul>
+    <li><strong>Configuration</strong> : <code>include/config.h</code> (versionné : identifiant, IP, broches, seuils) et <code>include/secrets.h</code> (ignoré par git : Wi-Fi, mot de passe MQTT, certificat de la CA). Sans <code>secrets.h</code>, la compilation s'arrête avec un message explicite.</li>
+    <li><strong>Boucle non bloquante</strong> : reconnexion Wi-Fi et MQTT en arrière-plan ; les capteurs sont lus même pendant une coupure réseau.</li>
+    <li><strong>Publication</strong> : télémétrie toutes les 2 s, événement immédiat à chaque changement d'état du PIR, statut retenu et message de « dernière volonté » (LWT) <code>{"online":false}</code>.</li>
+    <li><strong>Commandes</strong> : <code>{"strobe":true,"duration_s":8}</code> fait clignoter la LED environnement (1 à 60 s).</li>
+    <li><strong>Avertissement local</strong> : LED environnement fixe au-dessus de 40 °C ou 800 mV (hystérésis 1 °C / 100 mV, gaz ignoré pendant le préchauffage). C'est un premier signal local : la décision d'anomalie reste à l'IA.</li>
+  </ul>
+  <h2>4.4 Format des données (v1)</h2>
+  <table>
+    <tr><th>Topic</th><th>Sens</th><th>Quand</th></tr>
+    <tr><td><code>vigil8/&lt;id&gt;/telemetry</code></td><td>nœud → serveur</td><td>toutes les 2 s</td></tr>
+    <tr><td><code>vigil8/&lt;id&gt;/event</code></td><td>nœud → serveur</td><td>changement d'état du PIR</td></tr>
+    <tr><td><code>vigil8/&lt;id&gt;/status</code></td><td>nœud → serveur (retenu)</td><td>connexion ; LWT publié par le broker si le nœud disparaît</td></tr>
+    <tr><td><code>vigil8/&lt;id&gt;/cmd</code></td><td>serveur → nœud</td><td>alerte confirmée ou commande opérateur</td></tr>
+  </table>
+<pre><code>{ "v": 1, "device_id": "VIG1L-8-NODE04", "seq": 18342, "uptime_ms": 36684012,
+  "temp_c": 25.8, "hum_pct": 61.5, "gas_mv": 259, "pir": false, "pir_events": 0,
+  "status": { "dht": "ok", "gas_warm": true, "env_warn": false, "rssi": -58 } }</code></pre>
+  <ul>
+    <li><code>temp_c</code> / <code>hum_pct</code> valent <code>null</code> si le DHT22 ne répond pas (pas de « dernière valeur connue » qui masquerait une panne).</li>
+    <li><code>gas_mv</code> : tension de sortie du MQ-2 en mV, non étalonnée (pas de ppm sans étalonnage en air propre).</li>
+    <li><code>seq</code> : compteur par topic. Un trou signale un message perdu, un retour à 0 avec un petit <code>uptime_ms</code> un redémarrage.</li>
+    <li><code>status.gas_warm</code> : faux pendant les 3 minutes de préchauffage, pour exclure ces mesures de l'entraînement.</li>
+  </ul>
+</section>
+
+<!-- ======================================================================= -->
+<section id="infra">
+  <h1>5. Infrastructure conteneurisée</h1>
+  <h2>5.1 Services</h2>
+  <table>
+    <tr><th>Service</th><th>Image / technologie</th><th>Rôle</th><th>Utilisateur</th><th>Exposition</th></tr>
+    <tr><td><code>mqtt-broker</code></td><td>Mosquitto 2.1 (digest épinglé)</td><td>Broker MQTT : TLS 8883 pour les nœuds, 1883 interne</td><td>mosquitto (1883)</td><td>18883 → 8883</td></tr>
+    <tr><td><code>history-db</code></td><td>CouchDB 3.5 (digest épinglé)</td><td>Base documentaire : <code>telemetry</code>, <code>events</code></td><td>couchdb (5984)</td><td>127.0.0.1:5984</td></tr>
+    <tr><td><code>history-db-init</code></td><td>CouchDB (curl)</td><td>Job au démarrage : bases, comptes, droits, vues</td><td>couchdb (5984)</td><td>—</td></tr>
+    <tr><td><code>backend</code></td><td>Go 1.26, binaire statique</td><td>Ingestion MQTT, API REST, WebSocket</td><td>sentinel (10001)</td><td>—</td></tr>
+    <tr><td><code>dashboard</code></td><td>React 19 + Vite, nginx non privilégié</td><td>Interface, proxy <code>/api</code>, <code>/ws</code>, <code>/vision/</code></td><td>nginx (101)</td><td>127.0.0.1:10443</td></tr>
+    <tr><td><code>ia-prediction</code></td><td>Python 3.12, scikit-learn 1.9</td><td>Isolation Forest en temps réel</td><td>ia (10001)</td><td>—</td></tr>
+    <tr><td><code>ia-vision</code></td><td>Python 3.12, PyTorch CPU, YOLOv8n</td><td>Détection d'intrusion, flux MJPEG</td><td>vision (10001)</td><td>— (webcam <code>/dev/video0</code>)</td></tr>
+  </table>
+  <figure>
+    <img src="diagrammes/infrastructure.svg" alt="Schéma de l'infrastructure Docker" style="max-height: 175mm">
+    <figcaption>Figure 3 — Conteneurs, réseaux Docker et sens des échanges. Chaque réseau relie une paire de services.</figcaption>
+  </figure>
+  <h2>5.2 Données</h2>
+  <ul>
+    <li><strong>Bases</strong> : <code>telemetry</code> (mesures) et <code>events</code> (mouvements, statuts, commandes, alertes, annotations), créées avec un seul shard (<code>q=1</code>) pour que le flux des changements reste ordonné.</li>
+    <li><strong>Identifiants</strong> : <code>&lt;device_id&gt;:&lt;heure de réception en ms sur 13 chiffres&gt;</code> : uniques et triés par le temps, ce qui rend les requêtes par plage de dates efficaces.</li>
+    <li><strong>Écriture</strong> : par lots (<code>_bulk_docs</code>) toutes les 2 s ; si CouchDB est indisponible, les documents attendent en mémoire (jusqu'à 20 000 par base) et sont réessayés.</li>
+    <li><strong>Vues</strong> : moyennes, minimums et maximums par minute et par heure (<code>_stats</code>) pour les graphiques longue durée.</li>
+    <li><strong>Droits</strong> : utilisateur <code>backend</code> (rôle <code>writer</code>), utilisateur <code>ia</code> (rôle <code>reader</code>, écriture refusée par <code>validate_doc_update</code>), design docs réservés à l'administrateur.</li>
+  </ul>
+  <h2>5.3 Construction et déploiement</h2>
+  <ul>
+    <li>Les images applicatives sont construites depuis la branche <code>main</code> de chaque dépôt (contexte Git distant) : rien n'est copié à la main.</li>
+    <li>Les images tierces sont <strong>épinglées par empreinte</strong> (<code>@sha256</code>) : une mise à jour en amont ne change rien sans décision explicite.</li>
+    <li>Secrets dans <code>infra/.env</code> (ignoré par git) ; <code>scripts/gen-certs.sh</code> crée la CA et le certificat du broker, <code>scripts/mqtt-passwd.sh</code> les comptes MQTT.</li>
+    <li>Construction avec Internet (<code>docker compose build</code>), puis fonctionnement hors ligne sur le hotspot (<code>docker compose up -d</code>) : le modèle YOLO est inclus dans l'image.</li>
+  </ul>
+<pre><code>cp .env.example .env                  # mots de passe et jetons
+./scripts/gen-certs.sh 192.168.10.1   # CA locale + certificat du broker
+./scripts/mqtt-passwd.sh              # comptes MQTT (backend, nœuds)
+docker compose build                  # avec Internet
+docker compose up -d                  # puis hors ligne, sur le hotspot</code></pre>
+  <h2>5.4 Maintien en condition opérationnelle</h2>
+  <ul>
+    <li><strong>Redémarrage automatique</strong> (<code>restart: unless-stopped</code>) et <strong>contrôles de santé</strong> (backend, dashboard).</li>
+    <li><strong>Logs</strong> : Mosquitto écrit sur la sortie standard, rotation Docker 3 × 10 Mo ; pas de croissance illimitée des journaux MQTT.</li>
+    <li><strong>Supervision</strong> : <code>GET /api/v1/health</code> (état MQTT et CouchDB, file d'écriture, messages rejetés), affiché dans le dashboard.</li>
+    <li><span class="status s-plan">PRÉVU</span> Suivi CPU/RAM de l'hôte sur le Raspberry Pi (<code>docker stats</code>, limites mémoire par conteneur).</li>
+  </ul>
+</section>
+
+<!-- ======================================================================= -->
+<section id="flux">
+  <h1>6. Séquences des échanges réseau</h1>
+  <h2>6.1 Connexion du nœud et télémétrie</h2>
+  <figure>
+    <img src="diagrammes/seq-telemetrie.svg" alt="Séquence de télémétrie" style="max-height: 150mm">
+    <figcaption>Figure 4 — Connexion TLS du nœud, télémétrie toutes les 2 s, événement PIR, déconnexion (LWT).</figcaption>
+  </figure>
+  <p>
+    Le backend est le seul abonné à tous les nœuds. Il valide chaque message, ajoute l'heure de réception, le pousse immédiatement
+    au dashboard par WebSocket et l'écrit en base par lots. Un message dont le <code>device_id</code> ne correspond pas au topic est
+    rejeté et compté, même si l'ACL du broker l'a laissé passer.
+  </p>
+  <h2>6.2 Maintenance prédictive : alertes à deux niveaux</h2>
+  <figure>
+    <img src="diagrammes/seq-alertes.svg" alt="Séquence des alertes de prédiction" style="max-height: 160mm">
+    <figcaption>Figure 5 — De la mesure en base à la LED du nœud : avertissement, confirmation, acquittement.</figcaption>
+  </figure>
+  <h2>6.3 Vision : intrusion et flux vidéo</h2>
+  <figure>
+    <img src="diagrammes/seq-vision.svg" alt="Séquence de la vision" style="max-height: 120mm">
+    <figcaption>Figure 6 — Détection d'intrusion et affichage du flux, protégé par la clé d'accès.</figcaption>
+  </figure>
+</section>
+
+<!-- ======================================================================= -->
+<section id="backend">
+  <h1>7. Backend, API et dashboard</h1>
+  <h2>7.1 API</h2>
+  <p>Toutes les routes, sauf <code>/api/v1/health</code>, exigent un jeton <code>Authorization: Bearer</code>. Référence complète : <code>backend/README.md</code>.</p>
+  <table>
+    <tr><th>Route</th><th>Rôle</th><th>Usage</th></tr>
+    <tr><td><code>GET /api/v1/devices</code></td><td>service</td><td>état temps réel des nœuds</td></tr>
+    <tr><td><code>GET /api/v1/devices/{id}/telemetry</code></td><td>service</td><td>historique brut (≤ 6 h) ou agrégé par minute / heure</td></tr>
+    <tr><td><code>GET /api/v1/devices/{id}/export.csv</code></td><td>service</td><td>CSV d'entraînement de l'Isolation Forest</td></tr>
+    <tr><td><code>POST /api/v1/alerts</code></td><td>service</td><td>alerte de l'IA (<code>warning</code> / <code>confirmed</code>) — point d'entrée obligatoire du sujet</td></tr>
+    <tr><td><code>POST /api/v1/alerts/{id}/ack</code></td><td>opérateur</td><td>acquittement</td></tr>
+    <tr><td><code>POST /api/v1/annotations</code></td><td>opérateur</td><td>période de test (exclue de l'entraînement)</td></tr>
+    <tr><td><code>POST /api/v1/devices/{id}/command</code></td><td>opérateur</td><td>LED environnement du nœud</td></tr>
+    <tr><td><code>GET /ws</code></td><td>service</td><td>WebSocket : instantané puis chaque message</td></tr>
+  </table>
+  <h2>7.2 Intégrité des données</h2>
+  <ul>
+    <li><strong>Validation</strong> : version du format, cohérence <code>device_id</code> / topic, plages physiques du DHT22, cohérence <code>dht</code> / valeurs.</li>
+    <li><strong>Stockage fidèle</strong> : le message est conservé tel quel ; le backend ajoute seulement <code>_id</code> et <code>received_at</code>.</li>
+    <li><strong>Requêtes</strong> : corps limités à 16 Ko, champs JSON inconnus refusés, identifiants validés par expressions régulières.</li>
+    <li><strong>Traçabilité</strong> : commandes, alertes et acquittements sont enregistrés comme événements, avec leur source.</li>
+  </ul>
+  <h2>7.3 Dashboard</h2>
+  <ul>
+    <li>Télémétrie en temps réel et historique (15 min à 24 h), capteurs en panne signalés (<code>ERR</code>), coupures visibles sur les courbes.</li>
+    <li>Alertes à deux niveaux avec acquittement, notification et son ; journal des événements.</li>
+    <li>Commande de la LED, périodes de test (annotations), export CSV pour l'entraînement.</li>
+    <li>Vision : état compact et flux vidéo affiché à la demande.</li>
+    <li>Connexion par clé d'accès (jeton API) gardée en <code>sessionStorage</code> ; mode lecture seule avec le jeton service.</li>
+  </ul>
+</section>
+
+<!-- ======================================================================= -->
+<section id="securite">
+  <h1>8. Matrice de sécurité</h1>
+  <h2>8.1 Chiffrement TLS</h2>
+  <table>
+    <tr><th>Élément</th><th>Choix</th></tr>
+    <tr><td>Autorité</td><td>CA locale « Sentinel-X Local CA » (RSA 2048, 10 ans) ; clé privée jamais montée dans un conteneur</td></tr>
+    <tr><td>Certificat du broker</td><td>RSA 2048, SHA-256, 825 jours ; SAN : <code>IP:192.168.10.1</code>, <code>DNS:192.168.10.1</code>, <code>127.0.0.1</code>, <code>mqtt-broker</code>, <code>localhost</code></td></tr>
+    <tr><td>Protocole</td><td>TLS 1.2 minimum sur le port 8883 ; le port 1883 sans TLS n'est joignable que sur les réseaux Docker internes</td></tr>
+    <tr><td>Vérification côté nœud</td><td>L'ESP32 embarque le certificat de la CA et vérifie celui du broker : un faux broker est refusé</td></tr>
+    <tr><td>Particularité</td><td>mbedTLS 2.x de l'ESP32 ne compare que les noms DNS : l'IP est donc aussi déclarée comme nom DNS dans le certificat</td></tr>
+  </table>
+  <h2>8.2 Menaces et contrôles</h2>
+  <table>
+    <tr><th style="width:22%">Menace</th><th>Contrôle</th><th class="c" style="width:12%">État</th></tr>
+    <tr><td>Écoute / homme du milieu sur le Wi-Fi</td><td>MQTT sur TLS, certificat vérifié par le nœud ; Wi-Fi WPA2</td><td class="c"><span class="status s-ok">FAIT</span></td></tr>
+    <tr><td>Connexion anonyme au broker</td><td><code>allow_anonymous false</code>, mots de passe hachés</td><td class="c"><span class="status s-ok">FAIT</span></td></tr>
+    <tr><td>Usurpation d'un nœud</td><td>Un compte par nœud ; ACL <code>vigil8/%u/…</code> ; contrôle <code>device_id</code> = topic dans le backend</td><td class="c"><span class="status s-ok">FAIT</span></td></tr>
+    <tr><td>Injection de commandes vers un nœud</td><td>Seul le compte <code>backend</code> peut publier sur <code>…/cmd</code> ; côté API, jeton opérateur requis</td><td class="c"><span class="status s-ok">FAIT</span></td></tr>
+    <tr><td>Accès à la base</td><td>Authentification obligatoire, écoute sur <code>127.0.0.1</code>, rôles écrivain / lecteur, validation d'écriture</td><td class="c"><span class="status s-ok">FAIT</span></td></tr>
+    <tr><td>Accès à l'API</td><td>Jetons opérateur / service (comparaison en temps constant), aucun secret par défaut</td><td class="c"><span class="status s-ok">FAIT</span></td></tr>
+    <tr><td>Déni de service applicatif</td><td>20 requêtes/s par IP, corps 16 Ko, délais HTTP, messages MQTT 4 Ko, 4 spectateurs vidéo max</td><td class="c"><span class="status s-ok">FAIT</span></td></tr>
+    <tr><td>Accès au dashboard</td><td>Écoute sur <code>127.0.0.1</code> ; CSP stricte, <code>X-Frame-Options</code>, <code>nosniff</code></td><td class="c"><span class="status s-ok">FAIT</span></td></tr>
+    <tr><td>Flux de la caméra</td><td>Clé d'accès vérifiée auprès du backend ; clé absente des journaux nginx</td><td class="c"><span class="status s-ok">FAIT</span></td></tr>
+    <tr><td>Fuite de secrets</td><td><code>.env</code>, mots de passe MQTT, certificats, <code>secrets.h</code> ignorés par git ; ancien mot de passe Wi-Fi retiré du code</td><td class="c"><span class="status s-ok">FAIT</span></td></tr>
+    <tr><td>Évasion de conteneur</td><td>Tous les services non root ; aucun conteneur privilégié ; seule la webcam est partagée</td><td class="c"><span class="status s-ok">FAIT</span></td></tr>
+    <tr><td>Images compromises en amont</td><td>Images tierces épinglées par empreinte</td><td class="c"><span class="status s-ok">FAIT</span></td></tr>
+    <tr><td>Ports inutiles ouverts sur l'hôte</td><td>UFW : tout refuser en entrée sauf 18883 depuis le hotspot et SSH ; port 18883 lié à <code>192.168.10.1</code></td><td class="c"><span class="status s-plan">PRÉVU</span></td></tr>
+    <tr><td>Accès SSH par mot de passe</td><td><code>PasswordAuthentication no</code>, <code>PermitRootLogin no</code>, clés uniquement</td><td class="c"><span class="status s-plan">PRÉVU</span></td></tr>
+    <tr><td>Privilèges du démon Docker</td><td>Pas d'utilisateur courant dans le groupe <code>docker</code> ; remapping des utilisateurs (<code>userns-remap</code>) ou Docker rootless</td><td class="c"><span class="status s-plan">PRÉVU</span></td></tr>
+    <tr><td>Mises à jour de l'hôte</td><td>Mises à jour de sécurité automatiques sur le Raspberry Pi OS</td><td class="c"><span class="status s-plan">PRÉVU</span></td></tr>
+  </table>
+  <h2>8.3 Durcissement de l'hôte (Raspberry Pi)</h2>
+  <p>Le Raspberry Pi cible n'était pas disponible pendant le développement ; voici la configuration prévue.</p>
+<pre><code># Pare-feu : tout refuser en entrée, sauf MQTTS depuis le hotspot et SSH
+sudo ufw default deny incoming && sudo ufw default allow outgoing
+sudo ufw allow in on wlan0 from 192.168.10.0/24 to any port 18883 proto tcp
+sudo ufw allow from &lt;poste d'administration&gt; to any port 22 proto tcp
+sudo ufw enable
+# docker-compose.yaml : "192.168.10.1:18883:8883" (Docker contourne UFW pour les ports publiés)
+
+# SSH : clés uniquement (/etc/ssh/sshd_config)
+PasswordAuthentication no
+PermitRootLogin no
+
+# Docker : remapping des utilisateurs (/etc/docker/daemon.json)
+{ "userns-remap": "default", "no-new-privileges": true }</code></pre>
+  <div class="a-completer">Captures ou sorties de commandes prouvant le durcissement sur le Raspberry Pi : <code>sudo ufw status verbose</code>, <code>sshd -T | grep -E "passwordauth|permitroot"</code>, <code>ss -ltnp</code>, <code>docker ps</code> avec les utilisateurs des conteneurs.</div>
+</section>
+
+<!-- ======================================================================= -->
+<section id="ia">
+  <h1>9. Documentation de l'IA</h1>
+  <h2>9.1 Vision : détection d'intrusion</h2>
+  <p>
+    Un script Python (<code>IA_Vision</code>) analyse la webcam USB du serveur. Pour respecter la contrainte de moins de 100 ms par image,
+    le modèle de détection n'est pas lancé sur chaque image : une <strong>soustraction de fond</strong> repère d'abord les mouvements,
+    et seuls les grands mouvements déclenchent <strong>YOLOv8n</strong>.
+  </p>
+  <table>
+    <tr><th>Étape</th><th>Paramètres</th></tr>
+    <tr><td>Prétraitement</td><td>Image redimensionnée en 640×480, niveaux de gris, flou gaussien 21×21</td></tr>
+    <tr><td>Soustraction de fond (MOG2)</td><td>Historique 500, seuil 80, ombres détectées ; 60 premières images d'apprentissage du décor</td></tr>
+    <tr><td>Filtre de lumière</td><td>Changement sur plus de 40 % de l'image ignoré (allumage d'une lampe, nuage)</td></tr>
+    <tr><td>Déclenchement</td><td>Contour de plus de 20 000 px → YOLOv8n</td></tr>
+    <tr><td>Confirmation</td><td>YOLOv8n, classe « personne » uniquement, confiance ≥ 0,5, entrée 320 px</td></tr>
+    <tr><td>Persistance</td><td>L'intrusion se termine après 2 s sans personne détectée</td></tr>
+    <tr><td>Alertes</td><td><code>warning</code> à la première personne confirmée ; <code>confirmed</code> après 3 s de présence (LED du nœud)</td></tr>
+  </table>
+  <p>
+    Les alertes sont envoyées dans un thread séparé : la boucle vidéo n'attend jamais le réseau. Le flux MJPEG des images annotées
+    n'est encodé que si quelqu'un le regarde.
+  </p>
+  <table>
+    <tr><th>Mesure</th><th>PC de développement (CPU, conteneur)</th><th>Raspberry Pi 5</th></tr>
+    <tr><td>Images par seconde</td><td>24,5</td><td><span class="tbd">à mesurer</span></td></tr>
+    <tr><td>Latence par image</td><td>37 ms (objectif &lt; 100 ms)</td><td><span class="tbd">à mesurer</span></td></tr>
+    <tr><td>Inférence YOLOv8n seule</td><td>38 ms</td><td><span class="tbd">à mesurer</span></td></tr>
+  </table>
+
+  <h2>9.2 Maintenance prédictive : Isolation Forest</h2>
+  <h3>Pourquoi l'Isolation Forest</h3>
+  <p>
+    Le sujet interdit les seuils statiques et demande de détecter des anomalies « cinétiques », par exemple une hausse lente de la
+    température associée à une micro-déviation du gaz, avant tout seuil critique. Nous n'avons <strong>aucun exemple réel d'anomalie
+    étiqueté</strong> : un modèle supervisé (Random Forest) ne pourrait être entraîné que sur des données inventées. L'Isolation Forest est
+    <strong>non supervisé</strong> : il apprend ce qui est normal à partir des vraies mesures et isole ce qui s'en écarte.
+  </p>
+  <h3>Données et caractéristiques</h3>
+  <ul>
+    <li><strong>Mesures</strong> : température, humidité, gaz, toutes les 2 s.</li>
+    <li><strong>Fenêtres</strong> : 60 mesures (2 minutes), calculées <strong>par segment continu</strong> (jamais à cheval sur une coupure).</li>
+    <li><strong>10 caractéristiques par fenêtre</strong> : moyenne (×3), écart-type (×3), pente par minute (×3, régression linéaire), corrélation température / gaz.</li>
+    <li><strong>Modèle</strong> : normalisation (<code>StandardScaler</code>) puis Isolation Forest (200 arbres, contamination 0,5 %).</li>
+  </ul>
+  <h3>Préparation des données d'entraînement</h3>
+  <p>Pour que le modèle n'apprenne que du « normal », les mesures suivantes sont retirées :</p>
+  <ul>
+    <li>DHT22 en erreur ou valeurs manquantes ;</li>
+    <li>préchauffage du MQ-2 (3 minutes après chaque démarrage) ;</li>
+    <li>périodes de test annotées depuis le dashboard (briquet, souffle chaud…) ;</li>
+    <li>segments de moins de 60 mesures.</li>
+  </ul>
+  <p>
+    Les données viennent de CouchDB (<code>entrainement.py --source couchdb</code>) ou du bouton « Exporter CSV » du dashboard,
+    qui applique exactement les mêmes règles.
+  </p>
+  <h3>Détection en temps réel</h3>
+  <ul>
+    <li>Lecture des nouvelles mesures dans CouchDB (flux <code>_changes</code>, compte lecture seule), tampon de 3 s pour les remettre dans l'ordre.</li>
+    <li>Au démarrage, les 2 dernières minutes sont rechargées : la détection reprend immédiatement, sans relancer d'alerte déjà envoyée.</li>
+    <li><strong>Avertissement</strong> après 2 fenêtres anormales consécutives (un motif commence), <strong>confirmation</strong> après 5 (le motif se poursuit, la LED du nœud clignote). Un seul envoi par niveau et par épisode ; l'épisode se termine après 30 s normales.</li>
+  </ul>
+  <h3>Évaluation</h3>
+  <table>
+    <tr><th>Jeu</th><th>Résultat</th></tr>
+    <tr><td>Données simulées normales (10 séries de 20 min)</td><td>0,07 % de fenêtres en fausse alerte</td></tr>
+    <tr><td>Dérive lente simulée (température, gaz, humidité)</td><td>Détectée 10 fois sur 10, en 0,8 min en moyenne</td></tr>
+    <tr><td>Pic de gaz simulé</td><td>Détecté 10 fois sur 10, en 0,2 min en moyenne</td></tr>
+    <tr><td>Chaîne complète, nœud simulé (modèle entraîné sur 900 mesures)</td><td>Avertissement à gaz = 266 mV (+8 mV au-dessus de la normale), confirmation 3 mesures plus tard, LED commandée</td></tr>
+  </table>
+  <div class="a-completer">Résultats sur les vraies mesures : nombre de mesures et de fenêtres d'entraînement, taux de fenêtres anormales sur le normal, et pour chaque test physique annoté (briquet, souffle chaud) : <code>DETECTE</code> / <code>non detecte</code> et délai (sortie de <code>entrainement.py --source couchdb</code>).</div>
+</section>
+
+<!-- ======================================================================= -->
+<section id="tests">
+  <h1>10. Tests et validation</h1>
+  <p>
+    En plus des tests unitaires (backend Go, avec détection des accès concurrents), chaque évolution a été validée sur une
+    <strong>pile complète</strong> : infrastructure, backend, dashboard et IA, avec un nœud ESP32 simulé qui publie au même format,
+    en MQTTS, avec son compte.
+  </p>
+  <table>
+    <tr><th>Domaine</th><th>Vérification</th><th class="c">Résultat</th></tr>
+    <tr><td>TLS</td><td>Connexion sans la CA du projet</td><td class="c">refusée</td></tr>
+    <tr><td>Broker</td><td>Connexion anonyme, mauvais mot de passe</td><td class="c">refusées</td></tr>
+    <tr><td>ACL</td><td>Un nœud publie au nom d'un autre ; un nœud lit les commandes d'un autre ; l'IA publie une commande</td><td class="c">bloqués</td></tr>
+    <tr><td>Backend</td><td><code>device_id</code> différent du topic</td><td class="c">rejeté et compté</td></tr>
+    <tr><td>CouchDB</td><td>Requête anonyme ; écriture par <code>ia</code> ; suppression d'une vue par <code>backend</code></td><td class="c">401 / 403 / 403</td></tr>
+    <tr><td>API</td><td>Sans jeton ; jeton service sur une commande ; champ JSON inconnu</td><td class="c">401 / 403 / 400</td></tr>
+    <tr><td>WebSocket</td><td>Mauvais jeton ; origine étrangère</td><td class="c">401 / 403</td></tr>
+    <tr><td>Vision</td><td>Flux sans clé ; avec clé</td><td class="c">401 / 200</td></tr>
+    <tr><td>Prédiction</td><td>Redémarrage pendant une anomalie</td><td class="c">aucun doublon</td></tr>
+    <tr><td>Export</td><td>CSV exporté puis entraînement</td><td class="c">900 / 900 mesures, modèle entraîné</td></tr>
+  </table>
+  <div class="a-completer">Mesures sur le système réel : connexion de l'ESP32 au hotspot (sortie du moniteur série), latence ESP32 → dashboard, consommation CPU / RAM du Raspberry Pi pendant la démonstration, photos du montage.</div>
+</section>
+
+<!-- ======================================================================= -->
+<section id="audit">
+  <h1>11. Rapport d'audit post-pentest</h1>
+  <div class="a-completer">Section à remplir le jeudi soir, après le pentest croisé. Garder la structure ci-dessous.</div>
+  <h2>11.1 Périmètre et conditions</h2>
+  <table>
+    <tr><th style="width:30%">Élément</th><th>Valeur</th></tr>
+    <tr><td>Date, horaires</td><td><span class="tbd">…</span></td></tr>
+    <tr><td>Groupes attaquants</td><td><span class="tbd">…</span></td></tr>
+    <tr><td>Surface exposée</td><td>Hotspot <code>VIGIL8_HOTSPOT</code>, port MQTTS 18883 ; <span class="tbd">autres ?</span></td></tr>
+    <tr><td>Outils observés</td><td><span class="tbd">Nmap, Wireshark, Metasploit…</span></td></tr>
+  </table>
+  <h2>11.2 Attaques subies</h2>
+  <table>
+    <tr><th>Heure</th><th>Attaque</th><th>Cible</th><th>Résultat (bloquée / réussie)</th><th>Preuve (log, capture)</th></tr>
+    <tr><td><span class="tbd">…</span></td><td><span class="tbd">Scan de ports</span></td><td><span class="tbd">…</span></td><td><span class="tbd">…</span></td><td><span class="tbd">…</span></td></tr>
+    <tr><td><span class="tbd">…</span></td><td><span class="tbd">Écoute / MitM du Wi-Fi</span></td><td><span class="tbd">…</span></td><td><span class="tbd">…</span></td><td><span class="tbd">…</span></td></tr>
+    <tr><td><span class="tbd">…</span></td><td><span class="tbd">Connexion MQTT / injection de messages</span></td><td><span class="tbd">…</span></td><td><span class="tbd">…</span></td><td><span class="tbd">…</span></td></tr>
+    <tr><td><span class="tbd">…</span></td><td><span class="tbd">Déni de service</span></td><td><span class="tbd">…</span></td><td><span class="tbd">…</span></td><td><span class="tbd">…</span></td></tr>
+  </table>
+  <p>Sources de preuves : <code>docker compose logs mqtt-broker</code> (connexions refusées), compteur <code>rejected</code> de <code>/api/v1/health</code>, journaux du backend, <code>sudo ufw status</code> / journaux du pare-feu.</p>
+  <h2>11.3 Impact et corrections</h2>
+  <table>
+    <tr><th>Vulnérabilité</th><th>Gravité</th><th>Impact</th><th>Correction appliquée ou proposée</th></tr>
+    <tr><td><span class="tbd">…</span></td><td><span class="tbd">…</span></td><td><span class="tbd">…</span></td><td><span class="tbd">…</span></td></tr>
+  </table>
+  <h2>11.4 Attaques menées sur les autres groupes</h2>
+  <table>
+    <tr><th>Groupe cible</th><th>Attaque</th><th>Résultat</th><th>Recommandation pour eux</th></tr>
+    <tr><td><span class="tbd">…</span></td><td><span class="tbd">…</span></td><td><span class="tbd">…</span></td><td><span class="tbd">…</span></td></tr>
+  </table>
+  <h2>11.5 Conclusion de l'audit</h2>
+  <p><span class="tbd">Bilan, points forts, faiblesses restantes, priorités.</span></p>
+</section>
+
+<!-- ======================================================================= -->
+<section id="limites">
+  <h1>12. Limites et améliorations</h1>
+  <table>
+    <tr><th>Limite</th><th>Conséquence</th><th>Amélioration</th></tr>
+    <tr><td>Wi-Fi WPA2-PSK partagé</td><td>Qui connaît le mot de passe rejoint le réseau (le MQTT reste protégé)</td><td>WPA3, ou isolation des clients sur le hotspot</td></tr>
+    <tr><td>Authentification du nœud par mot de passe</td><td>Mot de passe lisible dans la mémoire flash si l'ESP32 est volé</td><td>Certificat client par nœud (mTLS), chiffrement de la flash</td></tr>
+    <tr><td>Clé d'accès dans l'URL du WebSocket et du flux vidéo</td><td>Les navigateurs ne permettent pas d'en-tête ; la clé est exclue des journaux</td><td>Jeton court à usage unique</td></tr>
+    <tr><td>Dashboard en HTTP</td><td>Acceptable car limité à <code>127.0.0.1</code></td><td>HTTPS avec la CA locale si l'accès distant devient nécessaire</td></tr>
+    <tr><td>MQ-2 non étalonné</td><td>Valeurs relatives (mV), pas de ppm</td><td>Étalonnage en air propre (R0), puis conversion par courbe</td></tr>
+    <tr><td>Filtre de lumière de la vision</td><td>Une personne très proche (plus de 40 % de l'image) peut être ignorée</td><td>Ajuster le seuil, ou lancer YOLO périodiquement</td></tr>
+    <tr><td>Modèle IA entraîné sur peu de données</td><td>Variations jour / nuit pas encore apprises</td><td>Collecter plusieurs jours, réentraîner régulièrement</td></tr>
+    <tr><td>Dépôts publics</td><td>Choix lié au contexte scolaire (construction sans identifiants)</td><td>Dépôts privés et clé de déploiement en lecture seule</td></tr>
+  </table>
+</section>
+
+<!-- ======================================================================= -->
+<section id="annexes">
+  <h1>13. Annexes</h1>
+  <h2>A. Dépôts</h2>
+  <table>
+    <tr><th>Dépôt</th><th>Contenu</th></tr>
+    <tr><td><code>infra</code></td><td>Docker Compose, configuration Mosquitto et CouchDB, scripts, ce rapport (<code>docs/rapport/</code>)</td></tr>
+    <tr><td><code>backend</code></td><td>Service Go : ingestion MQTT, API REST, WebSocket, export CSV</td></tr>
+    <tr><td><code>dashboard</code></td><td>Interface React, configuration nginx</td></tr>
+    <tr><td><code>firmware</code></td><td>Firmware ESP32 (PlatformIO), diagnostic matériel</td></tr>
+    <tr><td><code>IA_Vision</code></td><td>Détection d'intrusion, flux MJPEG, image Docker</td></tr>
+    <tr><td><code>IA_Predictions</code></td><td>Isolation Forest : génération de données, entraînement, export, détection en temps réel</td></tr>
+  </table>
+  <h2>B. Comptes et secrets</h2>
+  <table>
+    <tr><th>Compte</th><th>Où</th><th>Droits</th></tr>
+    <tr><td><code>VIG1L-8-NODE04</code></td><td>Mosquitto</td><td>publie sur ses propres topics, lit ses commandes</td></tr>
+    <tr><td><code>backend</code></td><td>Mosquitto</td><td>lit tous les nœuds, publie les commandes</td></tr>
+    <tr><td><code>admin</code></td><td>CouchDB</td><td>administration, job d'initialisation uniquement</td></tr>
+    <tr><td><code>backend</code></td><td>CouchDB</td><td>rôle <code>writer</code></td></tr>
+    <tr><td><code>ia</code></td><td>CouchDB</td><td>rôle <code>reader</code> (lecture seule)</td></tr>
+    <tr><td>jeton opérateur</td><td>API</td><td>tout, y compris commandes et acquittements</td></tr>
+    <tr><td>jeton service</td><td>API</td><td>lecture et envoi d'alertes (IA)</td></tr>
+  </table>
+  <p>Tous les secrets sont dans <code>infra/.env</code>, <code>infra/config/mosquitto/passwd</code> (haché), <code>infra/certs/</code> et <code>firmware/include/secrets.h</code>, ignorés par git.</p>
+  <h2>C. Poster A3</h2>
+  <div class="a-completer">Poster A3 à joindre en annexe (à réaliser).</div>
+</section>
+
+</body>
+</html>

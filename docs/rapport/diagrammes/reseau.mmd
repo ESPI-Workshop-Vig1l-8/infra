@@ -1,0 +1,16 @@
+flowchart LR
+  subgraph table["Réseau de table — VIGIL8_HOTSPOT — 192.168.10.0/24 — WPA2, 2,4 GHz"]
+    direction LR
+    esp["Nœud ESP32<br/>VIG1L-8-NODE04<br/><b>192.168.10.5</b> (IP fixe)"]
+    srv["PC Serveur Local<br/><b>192.168.10.1</b><br/>passerelle + DHCP .10 à .254"]
+    autres["Autres clients<br/>(DHCP .10 à .254)"]
+  end
+  cam["Webcam USB"]
+  op["Opérateur<br/>(écran du serveur)"]
+  net(["Internet<br/>(construction des images uniquement)"])
+
+  esp -- "MQTTS 18883/tcp<br/>TLS 1.2+, compte du nœud" --> srv
+  autres -. "aucun service exposé<br/>sauf 18883 (auth + ACL)" .-> srv
+  cam -- "USB /dev/video0" --> srv
+  op -- "http://localhost:10443<br/>(127.0.0.1 uniquement)" --> srv
+  net -. "docker compose build<br/>avant le passage sur le hotspot" .-> srv

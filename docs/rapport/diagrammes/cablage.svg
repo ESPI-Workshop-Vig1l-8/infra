@@ -1,0 +1,157 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 840" width="1000" height="840" font-family="DejaVu Sans, Arial, sans-serif">
+<rect width="1000" height="840" fill="#ffffff"/>
+<text x="500.0" y="30" font-size="18" text-anchor="middle" font-weight="bold" fill="#212121">Sentinel-X — câblage du nœud VIG1L-8-NODE04 (ESP32)</text>
+<text x="500.0" y="52" font-size="12" text-anchor="middle" font-weight="normal" fill="#546e7a" font-style="italic">Deux étiquettes de même nom sont reliées · GND commun à tous les composants · LED : patte longue (anode) côté résistance</text>
+<rect x="40" y="90" width="250" height="520" rx="8" fill="#eceff1" stroke="#455a64" stroke-width="2"/>
+<text x="165.0" y="112" font-size="15" text-anchor="middle" font-weight="bold" fill="#212121">ESP32 DevKit (esp32dev)</text>
+<circle cx="290" cy="160" r="4" fill="#c62828"/>
+<text x="278" y="164" font-size="13" text-anchor="end" font-weight="bold" fill="#212121">VIN (5V)</text>
+<line x1="290" y1="160" x2="330" y2="160" stroke="#c62828" stroke-width="2" stroke-linecap="round"/>
+<rect x="330" y="149" width="31.0" height="22" rx="11" fill="#c62828" fill-opacity="0.12" stroke="#c62828" stroke-width="1.6"/>
+<text x="345.5" y="164.5" font-size="12" text-anchor="middle" font-weight="bold" fill="#c62828">5V</text>
+<circle cx="290" cy="212" r="4" fill="#ef6c00"/>
+<text x="278" y="216" font-size="13" text-anchor="end" font-weight="bold" fill="#212121">3V3</text>
+<line x1="290" y1="212" x2="330" y2="212" stroke="#ef6c00" stroke-width="2" stroke-linecap="round"/>
+<rect x="330" y="201" width="39.5" height="22" rx="11" fill="#ef6c00" fill-opacity="0.12" stroke="#ef6c00" stroke-width="1.6"/>
+<text x="349.75" y="216.5" font-size="12" text-anchor="middle" font-weight="bold" fill="#ef6c00">3V3</text>
+<circle cx="290" cy="264" r="4" fill="#37474f"/>
+<text x="278" y="268" font-size="13" text-anchor="end" font-weight="bold" fill="#212121">GND</text>
+<line x1="290" y1="264" x2="330" y2="264" stroke="#37474f" stroke-width="2" stroke-linecap="round"/>
+<rect x="330" y="253" width="39.5" height="22" rx="11" fill="#37474f" fill-opacity="0.12" stroke="#37474f" stroke-width="1.6"/>
+<text x="349.75" y="268.5" font-size="12" text-anchor="middle" font-weight="bold" fill="#37474f">GND</text>
+<circle cx="290" cy="316" r="4" fill="#1565c0"/>
+<text x="278" y="320" font-size="13" text-anchor="end" font-weight="bold" fill="#212121">GPIO 4</text>
+<line x1="290" y1="316" x2="330" y2="316" stroke="#1565c0" stroke-width="2" stroke-linecap="round"/>
+<rect x="330" y="305" width="56.5" height="22" rx="11" fill="#1565c0" fill-opacity="0.12" stroke="#1565c0" stroke-width="1.6"/>
+<text x="358.25" y="320.5" font-size="12" text-anchor="middle" font-weight="bold" fill="#1565c0">GPIO4</text>
+<circle cx="290" cy="368" r="4" fill="#6a1b9a"/>
+<text x="278" y="372" font-size="13" text-anchor="end" font-weight="bold" fill="#212121">GPIO 14</text>
+<line x1="290" y1="368" x2="330" y2="368" stroke="#6a1b9a" stroke-width="2" stroke-linecap="round"/>
+<rect x="330" y="357" width="65.0" height="22" rx="11" fill="#6a1b9a" fill-opacity="0.12" stroke="#6a1b9a" stroke-width="1.6"/>
+<text x="362.5" y="372.5" font-size="12" text-anchor="middle" font-weight="bold" fill="#6a1b9a">GPIO14</text>
+<circle cx="290" cy="420" r="4" fill="#2e7d32"/>
+<text x="278" y="424" font-size="13" text-anchor="end" font-weight="bold" fill="#212121">GPIO 34 (ADC1)</text>
+<line x1="290" y1="420" x2="330" y2="420" stroke="#2e7d32" stroke-width="2" stroke-linecap="round"/>
+<rect x="330" y="409" width="65.0" height="22" rx="11" fill="#2e7d32" fill-opacity="0.12" stroke="#2e7d32" stroke-width="1.6"/>
+<text x="362.5" y="424.5" font-size="12" text-anchor="middle" font-weight="bold" fill="#2e7d32">GPIO34</text>
+<circle cx="290" cy="472" r="4" fill="#00838f"/>
+<text x="278" y="476" font-size="13" text-anchor="end" font-weight="bold" fill="#212121">GPIO 18</text>
+<line x1="290" y1="472" x2="330" y2="472" stroke="#00838f" stroke-width="2" stroke-linecap="round"/>
+<rect x="330" y="461" width="65.0" height="22" rx="11" fill="#00838f" fill-opacity="0.12" stroke="#00838f" stroke-width="1.6"/>
+<text x="362.5" y="476.5" font-size="12" text-anchor="middle" font-weight="bold" fill="#00838f">GPIO18</text>
+<circle cx="290" cy="524" r="4" fill="#ad1457"/>
+<text x="278" y="528" font-size="13" text-anchor="end" font-weight="bold" fill="#212121">GPIO 19</text>
+<line x1="290" y1="524" x2="330" y2="524" stroke="#ad1457" stroke-width="2" stroke-linecap="round"/>
+<rect x="330" y="513" width="65.0" height="22" rx="11" fill="#ad1457" fill-opacity="0.12" stroke="#ad1457" stroke-width="1.6"/>
+<text x="362.5" y="528.5" font-size="12" text-anchor="middle" font-weight="bold" fill="#ad1457">GPIO19</text>
+<text x="56" y="552" font-size="11" text-anchor="start" font-weight="normal" fill="#455a64">LED intégrée : GPIO 2 (suit le PIR)</text>
+<text x="56" y="570" font-size="11" text-anchor="start" font-weight="normal" fill="#455a64">USB : alimentation 5 V + programmation</text>
+<text x="56" y="588" font-size="11" text-anchor="start" font-weight="normal" fill="#455a64">Wi-Fi 2,4 GHz → hotspot 192.168.10.0/24</text>
+<rect x="640" y="80" width="320" height="130" rx="8" fill="#fafafa" stroke="#455a64" stroke-width="2"/>
+<text x="800.0" y="102" font-size="15" text-anchor="middle" font-weight="bold" fill="#212121">DHT22 — température / humidité</text>
+<circle cx="640" cy="126" r="4" fill="#ef6c00"/>
+<text x="652" y="130" font-size="12" text-anchor="start" font-weight="bold" fill="#212121">VCC</text>
+<line x1="604" y1="126" x2="640" y2="126" stroke="#ef6c00" stroke-width="2" stroke-linecap="round"/>
+<rect x="564.5" y="115" width="39.5" height="22" rx="11" fill="#ef6c00" fill-opacity="0.12" stroke="#ef6c00" stroke-width="1.6"/>
+<text x="584.25" y="130.5" font-size="12" text-anchor="middle" font-weight="bold" fill="#ef6c00">3V3</text>
+<circle cx="640" cy="156" r="4" fill="#1565c0"/>
+<text x="652" y="160" font-size="12" text-anchor="start" font-weight="bold" fill="#212121">DATA</text>
+<line x1="604" y1="156" x2="640" y2="156" stroke="#1565c0" stroke-width="2" stroke-linecap="round"/>
+<rect x="547.5" y="145" width="56.5" height="22" rx="11" fill="#1565c0" fill-opacity="0.12" stroke="#1565c0" stroke-width="1.6"/>
+<text x="575.75" y="160.5" font-size="12" text-anchor="middle" font-weight="bold" fill="#1565c0">GPIO4</text>
+<circle cx="640" cy="186" r="4" fill="#37474f"/>
+<text x="652" y="190" font-size="12" text-anchor="start" font-weight="bold" fill="#212121">GND</text>
+<line x1="604" y1="186" x2="640" y2="186" stroke="#37474f" stroke-width="2" stroke-linecap="round"/>
+<rect x="564.5" y="175" width="39.5" height="22" rx="11" fill="#37474f" fill-opacity="0.12" stroke="#37474f" stroke-width="1.6"/>
+<text x="584.25" y="190.5" font-size="12" text-anchor="middle" font-weight="bold" fill="#37474f">GND</text>
+<text x="760" y="126" font-size="11" text-anchor="start" font-weight="normal" fill="#546e7a">Alimenté en 3,3 V : signal</text>
+<text x="760" y="144" font-size="11" text-anchor="start" font-weight="normal" fill="#546e7a">compatible ESP32 sans diviseur.</text>
+<text x="760" y="162" font-size="11" text-anchor="start" font-weight="normal" fill="#546e7a">Capteur nu : pull-up 10 kΩ</text>
+<text x="760" y="180" font-size="11" text-anchor="start" font-weight="normal" fill="#546e7a">entre DATA et 3V3.</text>
+<rect x="640" y="230" width="320" height="130" rx="8" fill="#fafafa" stroke="#455a64" stroke-width="2"/>
+<text x="800.0" y="252" font-size="15" text-anchor="middle" font-weight="bold" fill="#212121">HC-SR501 — présence (PIR)</text>
+<circle cx="640" cy="276" r="4" fill="#c62828"/>
+<text x="652" y="280" font-size="12" text-anchor="start" font-weight="bold" fill="#212121">VCC</text>
+<line x1="604" y1="276" x2="640" y2="276" stroke="#c62828" stroke-width="2" stroke-linecap="round"/>
+<rect x="573.0" y="265" width="31.0" height="22" rx="11" fill="#c62828" fill-opacity="0.12" stroke="#c62828" stroke-width="1.6"/>
+<text x="588.5" y="280.5" font-size="12" text-anchor="middle" font-weight="bold" fill="#c62828">5V</text>
+<circle cx="640" cy="306" r="4" fill="#6a1b9a"/>
+<text x="652" y="310" font-size="12" text-anchor="start" font-weight="bold" fill="#212121">OUT</text>
+<line x1="604" y1="306" x2="640" y2="306" stroke="#6a1b9a" stroke-width="2" stroke-linecap="round"/>
+<rect x="539.0" y="295" width="65.0" height="22" rx="11" fill="#6a1b9a" fill-opacity="0.12" stroke="#6a1b9a" stroke-width="1.6"/>
+<text x="571.5" y="310.5" font-size="12" text-anchor="middle" font-weight="bold" fill="#6a1b9a">GPIO14</text>
+<circle cx="640" cy="336" r="4" fill="#37474f"/>
+<text x="652" y="340" font-size="12" text-anchor="start" font-weight="bold" fill="#212121">GND</text>
+<line x1="604" y1="336" x2="640" y2="336" stroke="#37474f" stroke-width="2" stroke-linecap="round"/>
+<rect x="564.5" y="325" width="39.5" height="22" rx="11" fill="#37474f" fill-opacity="0.12" stroke="#37474f" stroke-width="1.6"/>
+<text x="584.25" y="340.5" font-size="12" text-anchor="middle" font-weight="bold" fill="#37474f">GND</text>
+<text x="760" y="276" font-size="11" text-anchor="start" font-weight="normal" fill="#546e7a">Sortie 3,3 V, alimentation 5 V.</text>
+<text x="760" y="294" font-size="11" text-anchor="start" font-weight="normal" fill="#546e7a">Cavalier sur H (re-déclenchable),</text>
+<text x="760" y="312" font-size="11" text-anchor="start" font-weight="normal" fill="#546e7a">potentiomètre Tx au minimum.</text>
+<text x="760" y="330" font-size="11" text-anchor="start" font-weight="normal" fill="#546e7a">Préchauffage : 30 s.</text>
+<rect x="640" y="380" width="320" height="150" rx="8" fill="#fafafa" stroke="#455a64" stroke-width="2"/>
+<text x="800.0" y="402" font-size="15" text-anchor="middle" font-weight="bold" fill="#212121">MQ-2 — gaz / fumées</text>
+<circle cx="640" cy="426" r="4" fill="#c62828"/>
+<text x="652" y="430" font-size="12" text-anchor="start" font-weight="bold" fill="#212121">VCC</text>
+<line x1="604" y1="426" x2="640" y2="426" stroke="#c62828" stroke-width="2" stroke-linecap="round"/>
+<rect x="573.0" y="415" width="31.0" height="22" rx="11" fill="#c62828" fill-opacity="0.12" stroke="#c62828" stroke-width="1.6"/>
+<text x="588.5" y="430.5" font-size="12" text-anchor="middle" font-weight="bold" fill="#c62828">5V</text>
+<circle cx="640" cy="456" r="4" fill="#37474f"/>
+<text x="652" y="460" font-size="12" text-anchor="start" font-weight="bold" fill="#212121">GND</text>
+<line x1="604" y1="456" x2="640" y2="456" stroke="#37474f" stroke-width="2" stroke-linecap="round"/>
+<rect x="564.5" y="445" width="39.5" height="22" rx="11" fill="#37474f" fill-opacity="0.12" stroke="#37474f" stroke-width="1.6"/>
+<text x="584.25" y="460.5" font-size="12" text-anchor="middle" font-weight="bold" fill="#37474f">GND</text>
+<circle cx="640" cy="486" r="4" fill="#2e7d32"/>
+<text x="652" y="490" font-size="12" text-anchor="start" font-weight="bold" fill="#212121">AO</text>
+<text x="760" y="426" font-size="11" text-anchor="start" font-weight="normal" fill="#546e7a">Chauffe 5 V (~150 mA) :</text>
+<text x="760" y="444" font-size="11" text-anchor="start" font-weight="normal" fill="#546e7a">préchauffage 3 min.</text>
+<text x="760" y="462" font-size="11" text-anchor="start" font-weight="normal" fill="#546e7a">AO jusqu'à 5 V → pont</text>
+<text x="760" y="480" font-size="11" text-anchor="start" font-weight="normal" fill="#546e7a">diviseur 10k/20k (5 V → 3,33 V).</text>
+<text x="760" y="498" font-size="11" text-anchor="start" font-weight="normal" fill="#546e7a">DO non connecté (seuil fixe).</text>
+<line x1="640" y1="486" x2="558.0" y2="486" stroke="#2e7d32" stroke-width="2" stroke-linecap="round"/>
+<rect x="558.0" y="479" width="44" height="14" rx="2" fill="#fff" stroke="#2e7d32" stroke-width="2"/>
+<line x1="602.0" y1="486" x2="520" y2="486" stroke="#2e7d32" stroke-width="2" stroke-linecap="round"/>
+<text x="580.0" y="508" font-size="11" text-anchor="middle" font-weight="normal" fill="#455a64">10 kΩ</text>
+<circle cx="520" cy="486" r="4" fill="#2e7d32"/>
+<line x1="520" y1="486" x2="490" y2="486" stroke="#2e7d32" stroke-width="2" stroke-linecap="round"/>
+<rect x="425.0" y="475" width="65.0" height="22" rx="11" fill="#2e7d32" fill-opacity="0.12" stroke="#2e7d32" stroke-width="1.6"/>
+<text x="457.5" y="490.5" font-size="12" text-anchor="middle" font-weight="bold" fill="#2e7d32">GPIO34</text>
+<line x1="520" y1="486" x2="520" y2="514.0" stroke="#37474f" stroke-width="2" stroke-linecap="round"/>
+<rect x="513" y="514.0" width="14" height="36" rx="2" fill="#fff" stroke="#37474f" stroke-width="2"/>
+<line x1="520" y1="550.0" x2="520" y2="578" stroke="#37474f" stroke-width="2" stroke-linecap="round"/>
+<text x="532" y="536.0" font-size="11" text-anchor="start" font-weight="normal" fill="#455a64">20 kΩ</text>
+<rect x="494" y="579" width="39.5" height="22" rx="11" fill="#37474f" fill-opacity="0.12" stroke="#37474f" stroke-width="1.6"/>
+<text x="513.75" y="594.5" font-size="12" text-anchor="middle" font-weight="bold" fill="#37474f">GND</text>
+<text x="390" y="658" font-size="13" text-anchor="start" font-weight="bold" fill="#212121">LED mouvement (suit le PIR)</text>
+<rect x="390" y="669" width="65.0" height="22" rx="11" fill="#ad1457" fill-opacity="0.12" stroke="#ad1457" stroke-width="1.6"/>
+<text x="422.5" y="684.5" font-size="12" text-anchor="middle" font-weight="bold" fill="#ad1457">GPIO19</text>
+<line x1="455.0" y1="680" x2="478.0" y2="680" stroke="#ad1457" stroke-width="2" stroke-linecap="round"/>
+<rect x="478.0" y="673" width="44" height="14" rx="2" fill="#fff" stroke="#ad1457" stroke-width="2"/>
+<line x1="522.0" y1="680" x2="545.0" y2="680" stroke="#ad1457" stroke-width="2" stroke-linecap="round"/>
+<text x="500.0" y="702" font-size="11" text-anchor="middle" font-weight="normal" fill="#455a64">220 Ω</text>
+<polygon points="545.0,670 545.0,690 563.0,680" fill="#ad1457" fill-opacity="0.25" stroke="#ad1457" stroke-width="2"/>
+<line x1="563.0" y1="670" x2="563.0" y2="690" stroke="#ad1457" stroke-width="2" stroke-linecap="round"/>
+<line x1="563.0" y1="680" x2="571.0" y2="680" stroke="#ad1457" stroke-width="2" stroke-linecap="round"/>
+<line x1="549.0" y1="667" x2="555.0" y2="659" stroke="#ad1457" stroke-width="1.4" stroke-linecap="round"/>
+<line x1="556.0" y1="667" x2="562.0" y2="659" stroke="#ad1457" stroke-width="1.4" stroke-linecap="round"/>
+<line x1="571.0" y1="680" x2="605.0" y2="680" stroke="#37474f" stroke-width="2" stroke-linecap="round"/>
+<rect x="605.0" y="669" width="39.5" height="22" rx="11" fill="#37474f" fill-opacity="0.12" stroke="#37474f" stroke-width="1.6"/>
+<text x="624.75" y="684.5" font-size="12" text-anchor="middle" font-weight="bold" fill="#37474f">GND</text>
+<text x="675.0" y="684" font-size="11" text-anchor="start" font-weight="normal" fill="#546e7a">allumée pendant une détection</text>
+<text x="390" y="730" font-size="13" text-anchor="start" font-weight="bold" fill="#212121">LED environnement (plafond local / alerte IA)</text>
+<rect x="390" y="741" width="65.0" height="22" rx="11" fill="#00838f" fill-opacity="0.12" stroke="#00838f" stroke-width="1.6"/>
+<text x="422.5" y="756.5" font-size="12" text-anchor="middle" font-weight="bold" fill="#00838f">GPIO18</text>
+<line x1="455.0" y1="752" x2="478.0" y2="752" stroke="#00838f" stroke-width="2" stroke-linecap="round"/>
+<rect x="478.0" y="745" width="44" height="14" rx="2" fill="#fff" stroke="#00838f" stroke-width="2"/>
+<line x1="522.0" y1="752" x2="545.0" y2="752" stroke="#00838f" stroke-width="2" stroke-linecap="round"/>
+<text x="500.0" y="774" font-size="11" text-anchor="middle" font-weight="normal" fill="#455a64">220 Ω</text>
+<polygon points="545.0,742 545.0,762 563.0,752" fill="#00838f" fill-opacity="0.25" stroke="#00838f" stroke-width="2"/>
+<line x1="563.0" y1="742" x2="563.0" y2="762" stroke="#00838f" stroke-width="2" stroke-linecap="round"/>
+<line x1="563.0" y1="752" x2="571.0" y2="752" stroke="#00838f" stroke-width="2" stroke-linecap="round"/>
+<line x1="549.0" y1="739" x2="555.0" y2="731" stroke="#00838f" stroke-width="1.4" stroke-linecap="round"/>
+<line x1="556.0" y1="739" x2="562.0" y2="731" stroke="#00838f" stroke-width="1.4" stroke-linecap="round"/>
+<line x1="571.0" y1="752" x2="605.0" y2="752" stroke="#37474f" stroke-width="2" stroke-linecap="round"/>
+<rect x="605.0" y="741" width="39.5" height="22" rx="11" fill="#37474f" fill-opacity="0.12" stroke="#37474f" stroke-width="1.6"/>
+<text x="624.75" y="756.5" font-size="12" text-anchor="middle" font-weight="bold" fill="#37474f">GND</text>
+<text x="675.0" y="756" font-size="11" text-anchor="start" font-weight="normal" fill="#546e7a">fixe : plafond local · clignotante : alerte IA</text>
+</svg>
