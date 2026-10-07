@@ -16,6 +16,7 @@ docker compose up -d
 - `history-db-init` runs on every `up` and sets up CouchDB (idempotent). The backend waits for it.
 - Dashboard: `http://localhost:10443`, **on the server PC only** (published on `127.0.0.1`). To open it from another machine, change the `ports` line of the `dashboard` service (`10443:8080`) or use an SSH tunnel (`ssh -L 10443:127.0.0.1:10443 <server>`). The access key is `API_OPERATOR_TOKEN` (full access) or `API_SERVICE_TOKEN` (read-only). The AI services use `API_SERVICE_TOKEN` to `POST /api/v1/alerts` on `http://backend:5000` (API reference in the `backend` README).
 - Certificates, `passwd` and `.env` are git-ignored: never commit them.
+- Only two ports are published: MQTTS `18883` for the nodes and the dashboard on `127.0.0.1:10443`. Training data comes from the dashboard's **Export CSV** button (backend `GET /api/v1/devices/{id}/export.csv`), or from inside the stack (`docker compose run --rm ia-prediction python entrainement.py --source couchdb`). CouchDB admin, when needed: `docker compose exec history-db curl -s -u "admin:<password>" http://localhost:5984/_all_dbs`.
 
 ## Security
 
@@ -23,8 +24,9 @@ docker compose up -d
 |---|---|
 | MQTT, sensor nodes | MQTTS only (TLS 1.2+, port `18883` on the host), username/password per node. ACL: a node can only publish on `vigil8/<its id>/…` and only read its own `cmd` topic |
 | MQTT, services | Plain port `1883` reachable only on the Docker networks. Only `backend` has a service account: it reads all nodes and writes commands. The AI services have no broker access |
-| CouchDB | Authentication required on every request. Published on `127.0.0.1:5984` only. User `backend` (role `writer`) is the only one allowed to write; user `ia` (role `reader`) is read-only and is how `ia-prediction` gets the live readings; design docs need the admin |
+| CouchDB | Authentication required on every request. Not published on the host: only reachable on the Docker networks of `backend` and `ia-prediction`. User `backend` (role `writer`) is the only one allowed to write; user `ia` (role `reader`) is read-only and is how `ia-prediction` gets the live readings; design docs need the admin |
 | HTTP | Only the dashboard's nginx is published, on `127.0.0.1:10443` (not reachable from the network); it serves the app and proxies `/api` and `/ws` to the backend, which is not published. Every API call needs a token: operator (dashboard, commands) or service (AI: read + alerts) |
+| Ports | Non-standard host ports (MQTTS `18883` instead of 8883, dashboard `10443`): automated attacks (bots, quick scans, worms) target the default ports of common services, so this keeps them out of reach and the logs quieter. It complements TLS, authentication and ACLs; it does not replace them, since a full scan (`nmap -p-`) still finds the ports |
 | Logs | Mosquitto logs to stdout, rotated by Docker (3 × 10 MB) |
 
 ## Data flow and format
