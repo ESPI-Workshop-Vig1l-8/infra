@@ -1,9 +1,9 @@
 # Rapport d'ingénierie technique
 
-Source of the deliverable [`../Workshop2026-M1-Gn-Dossier.pdf`](../Workshop2026-M1-Gn-Dossier.pdf) (`Gn` until the group number is known) (in French): network diagram, wiring diagram, security matrix, AI documentation, post-pentest audit.
+Source of the deliverable [`../Workshop2026-M1-GXX-Dossier.pdf`](../Workshop2026-M1-GXX-Dossier.pdf) (`GXX` until the group number is known) (in French): network diagram, wiring diagram, security matrix, AI documentation, post-pentest audit.
 
 ```bash
-./build.sh        # -> docs/Workshop2026-M1-Gn-Dossier.pdf
+./build.sh        # -> docs/Workshop2026-M1-GXX-Dossier.pdf
 ./build.sh 3      # -> docs/Workshop2026-M1-G3-Dossier.pdf
 ```
 
