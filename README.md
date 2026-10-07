@@ -22,8 +22,8 @@ docker compose up -d
 | Component | Rule |
 |---|---|
 | MQTT, sensor nodes | MQTTS only (TLS 1.2+, port `18883` on the host), username/password per node. ACL: a node can only publish on `vigil8/<its id>/…` and only read its own `cmd` topic |
-| MQTT, services | Plain port `1883` reachable only on the Docker networks. `backend` reads all nodes and writes commands; `ia-prediction` reads telemetry only |
-| CouchDB | Authentication required on every request. Published on `127.0.0.1:5984` only. User `backend` (role `writer`) is the only one allowed to write; user `ia` (role `reader`) is read-only; design docs need the admin |
+| MQTT, services | Plain port `1883` reachable only on the Docker networks. Only `backend` has a service account: it reads all nodes and writes commands. The AI services have no broker access |
+| CouchDB | Authentication required on every request. Published on `127.0.0.1:5984` only. User `backend` (role `writer`) is the only one allowed to write; user `ia` (role `reader`) is read-only and is how `ia-prediction` gets the live readings; design docs need the admin |
 | HTTP | Only the dashboard's nginx is published, on `127.0.0.1:10443` (not reachable from the network); it serves the app and proxies `/api` and `/ws` to the backend, which is not published. Every API call needs a token: operator (dashboard, commands) or service (AI: read + alerts) |
 | Logs | Mosquitto logs to stdout, rotated by Docker (3 × 10 MB) |
 
@@ -31,8 +31,9 @@ docker compose up -d
 
 ```
 ESP32 ──MQTTS──► Mosquitto ──► backend ──► CouchDB (telemetry, events)
-                     └───────► ia-prediction (live)      ▲
-                                                         └── training export (IA_Predictions)
+                                  ▲                │ read-only (_changes feed + training export)
+                                  │                ▼
+                                  └── alerts ── ia-prediction
 ```
 
 The backend is the only writer to CouchDB. It stores each MQTT message unchanged and adds `_id` (`<device_id>:<received_at>`, sorted by time) and `received_at` (server time, epoch ms).
@@ -101,7 +102,7 @@ docker compose up -d
 
 ## AI services
 
-- **ia-prediction** (container): live Isolation Forest on the MQTT telemetry, sends `warning` / `confirmed` alerts to the backend. The model lives on the `prediction-models` volume; to retrain on the real data stored in CouchDB:
+- **ia-prediction** (container): live Isolation Forest on the readings stored in CouchDB (`_changes` feed of `telemetry`, read-only `ia` user: only data validated by the backend), sends `warning` / `confirmed` alerts to the backend. The model lives on the `prediction-models` volume; to retrain on the real data stored in CouchDB:
   ```bash
   docker compose run --rm ia-prediction python entrainement.py --source couchdb
   docker compose restart ia-prediction

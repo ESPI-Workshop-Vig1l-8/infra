@@ -7,7 +7,6 @@ services:
     networks:
       - mqtt--sensors
       - mqtt--backend
-      - mqtt--prediction
     ports:
       - 18883:8883   # MQTTS for the sensor nodes (TLS)
     logging:
@@ -97,7 +96,7 @@ services:
   # through the dashboard (http://127.0.0.1:10443) and the dashboard proxies
   # its stream (VISION_UPSTREAM above). See the IA_Vision README.
 
-  # Live anomaly detection (Isolation Forest) on the MQTT telemetry
+  # Live anomaly detection (Isolation Forest) on the readings stored in CouchDB
   ia-prediction:
     build:
       context: https://github.com/ESPI-Workshop-Vig1l-8/IA_Predictions.git#main
@@ -106,9 +105,6 @@ services:
       - prediction-models:/models
     environment:
       FICHIER_MODELE: /models/modele_anomalies.joblib
-      MQTT_BROKER: tcp://mqtt-broker:1883
-      MQTT_USERNAME: ia-prediction
-      MQTT_PASSWORD: ${MQTT_PREDICTION_PASSWORD}
       COUCHDB_URL: http://history-db:5984
       COUCHDB_USER: ia
       COUCHDB_PASSWORD: ${COUCHDB_IA_PASSWORD}
@@ -116,11 +112,12 @@ services:
       API_SERVICE_TOKEN: ${API_SERVICE_TOKEN}
     networks:
       - history--prediction
-      - mqtt--prediction
       - prediction--backend
     depends_on:
-      - mqtt-broker
-      - backend
+      history-db-init:
+        condition: service_completed_successfully
+      backend:
+        condition: service_started
     restart: unless-stopped
 
   # reverse-proxy:
@@ -135,7 +132,6 @@ networks:
   dashboard--backend:
   mqtt--backend:
   mqtt--sensors:
-  mqtt--prediction:
   prediction--backend:
 
 volumes:

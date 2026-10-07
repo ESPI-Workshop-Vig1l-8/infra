@@ -44,8 +44,10 @@ curl -sf -u "$AUTH" -X PUT "$URL/_node/_local/_config/chttpd/require_valid_user_
 echo "  ok    require_valid_user_except_for_up"
 
 echo "Databases"
+# q=1: one shard per database (single node), so the _changes feed read by
+# ia-prediction stays in write order. Only applies when a database is created.
 for db in _users _replicator telemetry events; do
-  code=$(curl -s -o /dev/null -w '%{http_code}' -u "$AUTH" -X PUT "$URL/$db")
+  code=$(curl -s -o /dev/null -w '%{http_code}' -u "$AUTH" -X PUT "$URL/$db?q=1")
   case "$code" in
     201|202) echo "  created $db" ;;
     412) echo "  exists  $db" ;;

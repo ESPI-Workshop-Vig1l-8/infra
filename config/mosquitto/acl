@@ -14,7 +14,3 @@ topic read vigil8/+/telemetry
 topic read vigil8/+/event
 topic read vigil8/+/status
 topic write vigil8/+/cmd
-
-# Prediction service: live telemetry only.
-user ia-prediction
-topic read vigil8/+/telemetry
