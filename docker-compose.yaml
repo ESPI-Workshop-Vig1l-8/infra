@@ -34,6 +34,7 @@ services:
   history-db-init:
     image: couchdb@sha256:8cf5f8442585c346d2717ff0ad95605731d2f19f67b8367840baa8d3b24ebc31
     entrypoint: ["sh", "/couchdb-init.sh"]
+    user: "5984:5984"   # the image's couchdb user: the overridden entrypoint would run as root
     volumes:
       - ./scripts/couchdb-init.sh:/couchdb-init.sh:ro
       - ./config/couchdb/design:/config/design:ro
