@@ -16,7 +16,7 @@
     <table>
       <tr><th style="width:32%">Groupe</th><td><span class="tbd">GXX</span></td></tr>
       <tr><th>Nœud</th><td>VIG1L-8-NODE04 (ESP32)</td></tr>
-      <tr><th>Option matérielle</th><td>A — PC Serveur Local sur Raspberry Pi 5 (développé et testé sur un PC Linux, même pile Docker)</td></tr>
+      <tr><th>Option matérielle</th><td>B — Topologie distribuée « Edge-to-Server » : PC Serveur Local = ordinateur portable Linux d'un membre du groupe</td></tr>
       <tr><th>Dépôts</th><td>github.com/ESPI-Workshop-Vig1l-8 : <code>infra</code>, <code>backend</code>, <code>dashboard</code>, <code>firmware</code>, <code>IA_Vision</code>, <code>IA_Predictions</code></td></tr>
     </table>
     <h3>Équipe</h3>
@@ -28,7 +28,7 @@
       <tr><td>Latif MOUINOU</td><td>CYBER</td><td>Sécurité, pentest et audit</td></tr>
     </table>
   </div>
-  <div class="foot">Document généré depuis <code>infra/docs/gen/</code> (HTML + diagrammes) — les encadrés « À COMPLÉTER » sont à remplir après les mesures sur la cible et le pentest croisé du jeudi.</div>
+  <div class="foot">Document généré depuis <code>infra/docs/gen/</code> (HTML + diagrammes) — les encadrés « À COMPLÉTER » sont à remplir après les mesures en conditions réelles et le pentest croisé du jeudi.</div>
 </section>
 
 <!-- ======================================================================= -->
@@ -53,7 +53,7 @@
   <h2>Conventions</h2>
   <p>
     <span class="status s-ok">FAIT</span> réalisé et testé ·
-    <span class="status s-plan">PRÉVU</span> décidé, à appliquer sur la cible (Raspberry Pi) ·
+    <span class="status s-plan">PRÉVU</span> décidé, à appliquer sur le PC Serveur Local ·
     <span class="status s-todo">À COMPLÉTER</span> mesure ou résultat à reporter.
     Les noms techniques (topics, champs JSON, variables) sont en <code>police fixe</code>.
   </p>
@@ -83,8 +83,8 @@
     <tr><td>Backend / dashboard</td><td>Ingestion validée, API REST + WebSocket, historique, alertes, commandes, export CSV d'entraînement</td><td class="c"><span class="status s-ok">FAIT</span></td></tr>
     <tr><td>IA</td><td>Vision MOG2 + YOLOv8n ; Isolation Forest entraîné sur les vraies mesures, détection en temps réel</td><td class="c"><span class="status s-ok">FAIT</span></td></tr>
     <tr><td>Sécurité</td><td>TLS, comptes et ACL par nœud, rôles API, conteneurs non root, secrets hors dépôt</td><td class="c"><span class="status s-ok">FAIT</span></td></tr>
-    <tr><td>Durcissement hôte</td><td>Pare-feu, SSH par clés, isolation Docker sur le Raspberry Pi</td><td class="c"><span class="status s-plan">PRÉVU</span></td></tr>
-    <tr><td>Mesures sur cible, pentest</td><td>Latences sur Raspberry Pi, tests physiques, résultats du pentest croisé</td><td class="c"><span class="status s-todo">À COMPLÉTER</span></td></tr>
+    <tr><td>Durcissement hôte</td><td>Pare-feu, SSH par clés, isolation Docker sur le PC Serveur Local</td><td class="c"><span class="status s-plan">PRÉVU</span></td></tr>
+    <tr><td>Mesures réelles, pentest</td><td>Latences en démonstration, tests physiques, résultats du pentest croisé</td><td class="c"><span class="status s-todo">À COMPLÉTER</span></td></tr>
   </table>
 </section>
 
@@ -100,11 +100,16 @@
   </p>
   <h2>2.2 Option matérielle</h2>
   <p>
-    Le PC Serveur Local cible est un <strong>Raspberry Pi 5 (option A)</strong>. Il n'était pas disponible pendant le développement :
-    toute la pile a été construite et testée sur un <strong>PC Linux</strong> avec exactement les mêmes conteneurs. Toutes les images de base
-    et les images épinglées (CouchDB, Mosquitto) existent en <code>linux/arm64</code>, et PyTorch publie des paquets ARM64 :
-    la pile se construit sur le Pi sans modification. Les performances (latence de la vision en particulier) devront y être re-mesurées.
+    Le groupe a retenu l'<strong>option B, « Edge-to-Server »</strong> : le Raspberry Pi est retiré et le rôle de PC Serveur Local est tenu
+    par l'<strong>ordinateur portable Linux</strong> d'un membre du groupe. Il exécute toute la pile Docker Compose, porte la webcam USB et sert
+    de point d'accès Wi-Fi (hotspot) au réseau de table. Le boîtier Sentinel-X ne contient que l'ESP32 et ses capteurs.
   </p>
+  <ul>
+    <li><strong>Pourquoi</strong> : la pile a été développée et validée sur ce PC ; l'IA profite de son processeur (vision à 37 ms par image) ; aucun écart entre l'environnement de développement et celui de la démonstration.</li>
+    <li><strong>Conséquence réseau</strong> : la carte Wi-Fi du portable est utilisée par le hotspot et ne peut pas être connectée à un autre réseau en même temps. Les images sont donc construites avec Internet <em>avant</em> la démonstration, puis la pile fonctionne hors ligne.</li>
+    <li><strong>Conséquence sécurité</strong> : le serveur est un poste personnel. Le durcissement (section 8.3) porte sur ce portable, et doit en plus protéger les données personnelles qu'il contient.</li>
+    <li><strong>Portabilité</strong> : les images restent compatibles <code>linux/arm64</code> ; un passage à l'option A (Raspberry Pi 5) resterait possible sans modifier la pile.</li>
+  </ul>
   <h2>2.3 Écarts au matériel prévu</h2>
   <table>
     <tr><th>Prévu par le sujet</th><th>Utilisé</th><th>Raison et conséquences</th></tr>
@@ -263,7 +268,7 @@ docker compose up -d                  # puis hors ligne, sur le hotspot</code></
     <li><strong>Redémarrage automatique</strong> (<code>restart: unless-stopped</code>) et <strong>contrôles de santé</strong> (backend, dashboard).</li>
     <li><strong>Logs</strong> : Mosquitto écrit sur la sortie standard, rotation Docker 3 × 10 Mo ; pas de croissance illimitée des journaux MQTT.</li>
     <li><strong>Supervision</strong> : <code>GET /api/v1/health</code> (état MQTT et CouchDB, file d'écriture, messages rejetés), affiché dans le dashboard.</li>
-    <li><span class="status s-plan">PRÉVU</span> Suivi CPU/RAM de l'hôte sur le Raspberry Pi (<code>docker stats</code>, limites mémoire par conteneur).</li>
+    <li><span class="status s-plan">PRÉVU</span> Suivi CPU/RAM du PC Serveur Local pendant la démonstration (<code>docker stats</code>, limites mémoire par conteneur).</li>
   </ul>
 </section>
 
@@ -353,16 +358,26 @@ docker compose up -d                  # puis hors ligne, sur le hotspot</code></
     <tr><td>Évasion de conteneur</td><td>Tous les services non root ; aucun conteneur privilégié ; seule la webcam est partagée</td><td class="c"><span class="status s-ok">FAIT</span></td></tr>
     <tr><td>Images compromises en amont</td><td>Images tierces épinglées par empreinte</td><td class="c"><span class="status s-ok">FAIT</span></td></tr>
     <tr><td>Attaques automatisées sur les ports par défaut</td><td>Ports non standard (MQTTS 18883, dashboard 10443) : hors de portée des scans et robots qui ne visent que les ports courants ; complément de TLS et de l'authentification</td><td class="c"><span class="status s-ok">FAIT</span></td></tr>
-    <tr><td>Ports inutiles ouverts sur l'hôte</td><td>UFW : tout refuser en entrée sauf 18883 depuis le hotspot et SSH ; port 18883 lié à <code>192.168.10.1</code></td><td class="c"><span class="status s-plan">PRÉVU</span></td></tr>
+    <tr><td>Ports inutiles ouverts sur l'hôte</td><td>UFW : tout refuser en entrée sauf 18883 depuis le hotspot (et SSH depuis le poste d'administration) ; port 18883 lié à <code>192.168.10.1</code></td><td class="c"><span class="status s-plan">PRÉVU</span></td></tr>
     <tr><td>Accès SSH par mot de passe</td><td><code>PasswordAuthentication no</code>, <code>PermitRootLogin no</code>, clés uniquement</td><td class="c"><span class="status s-plan">PRÉVU</span></td></tr>
     <tr><td>Privilèges du démon Docker</td><td>Pas d'utilisateur courant dans le groupe <code>docker</code> ; remapping des utilisateurs (<code>userns-remap</code>) ou Docker rootless</td><td class="c"><span class="status s-plan">PRÉVU</span></td></tr>
-    <tr><td>Mises à jour de l'hôte</td><td>Mises à jour de sécurité automatiques sur le Raspberry Pi OS</td><td class="c"><span class="status s-plan">PRÉVU</span></td></tr>
+    <tr><td>Données personnelles du portable</td><td>Session dédiée à la démonstration, disque chiffré, verrouillage de l'écran, aucun autre service réseau actif (partage de fichiers, etc.)</td><td class="c"><span class="status s-plan">PRÉVU</span></td></tr>
+    <tr><td>Mises à jour de l'hôte</td><td>Mises à jour de sécurité appliquées avant la semaine de démonstration</td><td class="c"><span class="status s-plan">PRÉVU</span></td></tr>
   </table>
-  <h2>8.3 Durcissement de l'hôte (Raspberry Pi)</h2>
-  <p>Le Raspberry Pi cible n'était pas disponible pendant le développement ; voici la configuration prévue.</p>
-<pre><code># Pare-feu : tout refuser en entrée, sauf MQTTS depuis le hotspot et SSH
+  <h2>8.3 Durcissement de l'hôte (PC Serveur Local)</h2>
+  <p>
+    Avec l'option B, le durcissement s'applique directement au portable qui sert de serveur (Linux, NetworkManager, interface Wi-Fi
+    <code>wlp0s20f3</code> en hotspot). Le simuler dans un conteneur n'aurait pas de sens : pare-feu, SSH et démon Docker appartiennent au
+    système hôte, c'est lui qui est exposé au réseau de table et que les autres groupes attaqueront.
+  </p>
+  <ul>
+    <li><strong>Docker contourne UFW</strong> pour les ports publiés (règles iptables propres) : le port MQTTS est donc aussi lié à l'adresse du hotspot dans <code>docker-compose.yaml</code>, sinon il resterait joignable sur toutes les interfaces (réseau de l'école compris).</li>
+    <li><strong>SSH</strong> : l'administration se fait sur le portable lui-même ; si le serveur SSH est activé, c'est par clés uniquement et depuis une seule adresse.</li>
+    <li><strong>Démon Docker</strong> : être dans le groupe <code>docker</code> équivaut à être root ; les commandes Docker passent par <code>sudo</code>. Le remapping des utilisateurs isole en plus les UID des conteneurs de ceux de l'hôte (à activer avant de créer les volumes : il change leur emplacement).</li>
+  </ul>
+<pre><code># Pare-feu : tout refuser en entrée, sauf MQTTS depuis le hotspot (et SSH depuis le poste d'administration)
 sudo ufw default deny incoming && sudo ufw default allow outgoing
-sudo ufw allow in on wlan0 from 192.168.10.0/24 to any port 18883 proto tcp
+sudo ufw allow in on wlp0s20f3 from 192.168.10.0/24 to any port 18883 proto tcp
 sudo ufw allow from &lt;poste d'administration&gt; to any port 22 proto tcp
 sudo ufw enable
 # docker-compose.yaml : "192.168.10.1:18883:8883" (Docker contourne UFW pour les ports publiés)
@@ -373,7 +388,7 @@ PermitRootLogin no
 
 # Docker : remapping des utilisateurs (/etc/docker/daemon.json)
 { "userns-remap": "default", "no-new-privileges": true }</code></pre>
-  <div class="a-completer">Captures ou sorties de commandes prouvant le durcissement sur le Raspberry Pi : <code>sudo ufw status verbose</code>, <code>sshd -T | grep -E "passwordauth|permitroot"</code>, <code>ss -ltnp</code>, <code>docker ps</code> avec les utilisateurs des conteneurs.</div>
+  <div class="a-completer">Captures ou sorties de commandes prouvant le durcissement du PC Serveur Local : <code>sudo ufw status verbose</code>, <code>sshd -T | grep -E "passwordauth|permitroot"</code>, <code>ss -ltnp</code>, <code>docker ps</code> avec les utilisateurs des conteneurs.</div>
 </section>
 
 <!-- ======================================================================= -->
@@ -400,7 +415,7 @@ PermitRootLogin no
     n'est encodé que si quelqu'un le regarde.
   </p>
   <table>
-    <tr><th>Mesure</th><th>PC de développement (CPU, conteneur)</th><th>Raspberry Pi 5</th></tr>
+    <tr><th>Mesure</th><th>Tests (CPU, conteneur)</th><th>Démonstration (webcam réelle)</th></tr>
     <tr><td>Images par seconde</td><td>24,5</td><td><span class="tbd">à mesurer</span></td></tr>
     <tr><td>Latence par image</td><td>37 ms (objectif &lt; 100 ms)</td><td><span class="tbd">à mesurer</span></td></tr>
     <tr><td>Inférence YOLOv8n seule</td><td>38 ms</td><td><span class="tbd">à mesurer</span></td></tr>
@@ -471,7 +486,7 @@ PermitRootLogin no
     <tr><td>Prédiction</td><td>Redémarrage pendant une anomalie</td><td class="c">aucun doublon</td></tr>
     <tr><td>Export</td><td>CSV exporté puis entraînement</td><td class="c">900 / 900 mesures, modèle entraîné</td></tr>
   </table>
-  <div class="a-completer">Mesures sur le système réel : connexion de l'ESP32 au hotspot (sortie du moniteur série), latence ESP32 → dashboard, consommation CPU / RAM du Raspberry Pi pendant la démonstration, photos du montage.</div>
+  <div class="a-completer">Mesures sur le système réel : connexion de l'ESP32 au hotspot (sortie du moniteur série), latence ESP32 → dashboard, consommation CPU / RAM du PC Serveur Local pendant la démonstration (<code>docker stats</code>), photos du montage.</div>
 </section>
 
 <!-- ======================================================================= -->
