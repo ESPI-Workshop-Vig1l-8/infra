@@ -9,11 +9,11 @@ Source de vérité : firmware/include/config.h et firmware/README.md.
 from pathlib import Path
 
 NETS = {
-    "5V": "#c62828", "3V3": "#ef6c00", "GND": "#37474f",
-    "GPIO4": "#1565c0", "GPIO14": "#6a1b9a", "GPIO34": "#2e7d32",
-    "GPIO18": "#00838f", "GPIO19": "#ad1457",
+    "5V": "#c62828", "GND": "#37474f",
+    "GPIO27": "#1565c0", "GPIO14": "#6a1b9a", "GPIO34": "#2e7d32",
+    "GPIO26": "#00838f", "GPIO25": "#ad1457", "GPIO33": "#ef6c00",
 }
-W, H = 1000, 840
+W, H = 1000, 860
 out = []
 
 
@@ -72,16 +72,17 @@ text(W / 2, 30, "Sentinel-X — câblage du nœud VIG1L-8-NODE04 (ESP32)", 18, "
 text(W / 2, 52, "Deux étiquettes de même nom sont reliées · GND commun à tous les composants · LED : patte longue (anode) côté résistance", 12, "middle", color="#546e7a", italic=True)
 
 # --- ESP32 ----------------------------------------------------------------------
-ex, ey, ew, eh = 40, 90, 250, 520
+ex, ey, ew, eh = 40, 90, 250, 570
 box(ex, ey, ew, eh, "ESP32 DevKit (esp32dev)", "#eceff1")
-pins = [("VIN (5V)", "5V"), ("3V3", "3V3"), ("GND", "GND"), ("GPIO 4", "GPIO4"), ("GPIO 14", "GPIO14"),
-        ("GPIO 34 (ADC1)", "GPIO34"), ("GPIO 18", "GPIO18"), ("GPIO 19", "GPIO19")]
+pins = [("VIN (5V)", "5V"), ("GND", "GND"), ("GPIO 14", "GPIO14"), ("GPIO 27", "GPIO27"),
+        ("GPIO 26", "GPIO26"), ("GPIO 25", "GPIO25"), ("GPIO 33", "GPIO33"), ("GPIO 34 (ADC1)", "GPIO34")]
 for i, (label, name) in enumerate(pins):
     y = ey + 70 + i * 52
     out.append(f'<circle cx="{ex + ew}" cy="{y}" r="4" fill="{NETS[name]}"/>')
     text(ex + ew - 12, y + 4, label, 13, "end", "bold")
     line(ex + ew, y, ex + ew + 40, y, NETS[name])
     net(ex + ew + 40, y, name)
+text(ex + 16, ey + eh - 76, "Broches toutes du même côté de la carte", 11, color="#455a64")
 text(ex + 16, ey + eh - 58, "LED intégrée : GPIO 2 (suit le PIR)", 11, color="#455a64")
 text(ex + 16, ey + eh - 40, "USB : alimentation 5 V + programmation", 11, color="#455a64")
 text(ex + 16, ey + eh - 22, "Wi-Fi 2,4 GHz → hotspot 192.168.10.0/24", 11, color="#455a64")
@@ -103,8 +104,8 @@ def component(y, h, title, pin_list, notes):
 
 
 component(80, 130, "DHT22 — température / humidité",
-          [("VCC", "3V3"), ("DATA", "GPIO4"), ("GND", "GND")],
-          ["Alimenté en 3,3 V : signal", "compatible ESP32 sans diviseur.", "Capteur nu : pull-up 10 kΩ", "entre DATA et 3V3."])
+          [("VCC", "GPIO33"), ("DATA", "GPIO27"), ("GND", "GND")],
+          ["Alimenté par GPIO 33 (3,3 V,", "~1,5 mA) : redémarrable", "par le firmware. Capteur nu :", "pull-up 10 kΩ DATA → VCC."])
 
 component(230, 130, "HC-SR501 — présence (PIR)",
           [("VCC", "5V"), ("OUT", "GPIO14"), ("GND", "GND")],
@@ -125,28 +126,30 @@ text(cx + 12, ao_y + 4, "AO", 12, weight="bold")
 text(cx + 120, my + 46, "Chauffe 5 V (~150 mA) :", 11, color="#546e7a")
 text(cx + 120, my + 64, "préchauffage 3 min.", 11, color="#546e7a")
 text(cx + 120, my + 82, "AO jusqu'à 5 V → pont", 11, color="#546e7a")
-text(cx + 120, my + 100, "diviseur 10k/20k (5 V → 3,33 V).", 11, color="#546e7a")
+text(cx + 120, my + 100, "diviseur 10k + 2×10k (→ 3,33 V).", 11, color="#546e7a")
 text(cx + 120, my + 118, "DO non connecté (seuil fixe).", 11, color="#546e7a")
 node_x = cx - 120
 resistor_h(cx, node_x, ao_y, "10 kΩ", NETS["GPIO34"])
 out.append(f'<circle cx="{node_x}" cy="{ao_y}" r="4" fill="{NETS["GPIO34"]}"/>')
 line(node_x, ao_y, node_x - 30, ao_y, NETS["GPIO34"])
 net(node_x - 30, ao_y, "GPIO34", "end")
-resistor_v(node_x, ao_y, ao_y + 92, "20 kΩ", NETS["GND"])
+resistor_v(node_x, ao_y, ao_y + 92, "2 × 10 kΩ", NETS["GND"])
 net(node_x - 26, ao_y + 104, "GND")
 
 # LED (GPIO → 220 Ω → anode, cathode → GND)
-for i, (name, title, color) in enumerate([("GPIO19", "LED mouvement (suit le PIR)", "#ad1457"),
-                                          ("GPIO18", "LED environnement (plafond local / alerte IA)", "#00838f")]):
-    ly = 680 + i * 72
+for i, (name, title, color) in enumerate([("GPIO25", "LED mouvement (suit le PIR)", "#ad1457"),
+                                          ("GPIO26", "LED environnement (plafond local / alerte IA)", "#00838f")]):
+    ly = 700 + i * 72
     text(cx - 250, ly - 22, title, 13, weight="bold")
     _, lw = net(cx - 250, ly, name)
     x0 = cx - 250 + lw
-    resistor_h(x0, x0 + 90, ly, "220 Ω", NETS[name])
+    resistor_h(x0, x0 + 90, ly, "220 Ω*", NETS[name])
     led(x0 + 90, ly, color)
     line(x0 + 116, ly, x0 + 150, ly, NETS["GND"])
     net(x0 + 150, ly, "GND")
-    text(x0 + 220, ly + 4, "fixe : plafond local · clignotante : alerte IA" if name == "GPIO18" else "allumée pendant une détection", 11, color="#546e7a")
+    text(x0 + 220, ly + 4, "fixe : plafond local · clignotante : alerte IA" if name == "GPIO26" else "allumée pendant une détection", 11, color="#546e7a")
+
+text(cx - 250, 830, "* 10 kΩ sur le prototype (seule valeur disponible) : LED peu lumineuses", 11, color="#546e7a", italic=True)
 
 svg = (f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {W} {H}" width="{W}" height="{H}" '
        f'font-family="DejaVu Sans, Arial, sans-serif">\n<rect width="{W}" height="{H}" fill="#ffffff"/>\n'

@@ -1,8 +1,7 @@
 flowchart TB
   esp(("ESP32"))
   cam["Webcam<br/>/dev/video0"]
-  nav["Navigateur<br/>127.0.0.1:10443"]
-  adm["Export / admin<br/>127.0.0.1:5984"]
+  nav["Navigateur<br/>127.0.0.1:10443<br/>(seul port HTTP publié)"]
 
   subgraph host["PC Serveur Local — Docker Compose (conteneurs non root)"]
     broker["mqtt-broker<br/>Mosquitto 2.1<br/>8883 TLS · 1883 interne"]
@@ -16,7 +15,7 @@ flowchart TB
 
   esp -- "18883 → 8883 (TLS)" --> broker
   broker -- "mqtt--backend · 1883" --> backend
-  backend -- "history--backend · écriture" --> couch
+  backend -- "history--backend · écriture, lecture (historique, export CSV)" --> couch
   init -- "history--backend · admin" --> couch
   pred -- "history--prediction · lecture seule (_changes)" --> couch
   pred -- "prediction--backend · POST /alerts" --> backend
@@ -25,4 +24,3 @@ flowchart TB
   dash -- "dashboard--vision · /vision/" --> vision
   cam --> vision
   nav --> dash
-  adm --> couch
