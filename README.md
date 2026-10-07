@@ -69,7 +69,7 @@ Telemetry (`v: 1`):
 - `status.env_warn` is `true` while the node's local fixed ceiling (temperature or gas) is exceeded; it only drives the node's warning LED, anomaly detection is done by the AI.
 
 Event: `{"v":1,"device_id":"…","seq":18343,"uptime_ms":36685120,"type":"motion","state":true}`
-Status: `{"online":true,"fw":"0.2.0","ip":"192.168.10.20"}` (the broker publishes `{"online":false}` if the node disappears)
+Status: `{"online":true,"fw":"0.2.0","ip":"192.168.10.5"}` (the broker publishes `{"online":false}` if the node disappears)
 Command: `{"strobe":true,"duration_s":8}` makes the node's environment LED blink (server alert, 1–60 s)
 
 Annotations (database `events`, written through the backend) mark test periods so they can be excluded from training and used to evaluate the model:
