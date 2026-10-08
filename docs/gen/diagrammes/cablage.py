@@ -111,7 +111,7 @@ component(230, 130, "HC-SR501 — présence (PIR)",
           [("VCC", "5V"), ("OUT", "GPIO14"), ("GND", "GND")],
           ["Sortie 3,3 V, alimentation 5 V.", "Cavalier sur H (re-déclenchable),", "potentiomètre Tx au minimum.", "Préchauffage : 30 s."])
 
-# MQ-2 : AO passe par un pont diviseur avant GPIO 34
+# MQ-2 : AO branché en direct sur GPIO 34
 my = 380
 box(cx, my, cw, 150, "MQ-2 — gaz / fumées")
 for i, (label, name) in enumerate([("VCC", "5V"), ("GND", "GND")]):
@@ -125,16 +125,11 @@ out.append(f'<circle cx="{cx}" cy="{ao_y}" r="4" fill="{NETS["GPIO34"]}"/>')
 text(cx + 12, ao_y + 4, "AO", 12, weight="bold")
 text(cx + 120, my + 46, "Chauffe 5 V (~150 mA) :", 11, color="#546e7a")
 text(cx + 120, my + 64, "préchauffage 3 min.", 11, color="#546e7a")
-text(cx + 120, my + 82, "AO jusqu'à 5 V → pont", 11, color="#546e7a")
-text(cx + 120, my + 100, "diviseur 10k + 2×10k (→ 3,33 V).", 11, color="#546e7a")
+text(cx + 120, my + 82, "AO en direct : quelques", 11, color="#546e7a")
+text(cx + 120, my + 100, "centaines de mV en air propre.", 11, color="#546e7a")
 text(cx + 120, my + 118, "DO non connecté (seuil fixe).", 11, color="#546e7a")
-node_x = cx - 120
-resistor_h(cx, node_x, ao_y, "10 kΩ", NETS["GPIO34"])
-out.append(f'<circle cx="{node_x}" cy="{ao_y}" r="4" fill="{NETS["GPIO34"]}"/>')
-line(node_x, ao_y, node_x - 30, ao_y, NETS["GPIO34"])
-net(node_x - 30, ao_y, "GPIO34", "end")
-resistor_v(node_x, ao_y, ao_y + 92, "2 × 10 kΩ", NETS["GND"])
-net(node_x - 26, ao_y + 104, "GND")
+line(cx - 36, ao_y, cx, ao_y, NETS["GPIO34"])
+net(cx - 36, ao_y, "GPIO34", "end")
 
 # LED (GPIO → 220 Ω → anode, cathode → GND)
 for i, (name, title, color) in enumerate([("GPIO25", "LED mouvement (suit le PIR)", "#ad1457"),

@@ -173,7 +173,7 @@
   <table>
     <tr><th>Composant</th><th>Mesure / rôle</th><th>Alimentation</th><th>Broche ESP32</th></tr>
     <tr><td>DHT22</td><td>Température, humidité (1 lecture / 2 s max)</td><td>3,3 V par GPIO 33</td><td>GPIO 27</td></tr>
-    <tr><td>MQ-2</td><td>Gaz combustibles, fumées (sortie analogique AO)</td><td>5 V (chauffe ~150 mA)</td><td>GPIO 34 (ADC1) via pont diviseur</td></tr>
+    <tr><td>MQ-2</td><td>Gaz combustibles, fumées (sortie analogique AO)</td><td>5 V (chauffe ~150 mA)</td><td>GPIO 34 (ADC1), en direct</td></tr>
     <tr><td>HC-SR501</td><td>Présence infrarouge (sortie 3,3 V)</td><td>5 V</td><td>GPIO 14</td></tr>
     <tr><td>LED mouvement + résistance</td><td>Allumée pendant une détection du PIR</td><td>—</td><td>GPIO 25</td></tr>
     <tr><td>LED environnement + résistance</td><td>Fixe : plafond local ; clignotante : alerte IA</td><td>—</td><td>GPIO 26</td></tr>
@@ -186,7 +186,7 @@
   <h2>4.2 Choix électroniques</h2>
   <ul>
     <li><strong>Une seule rangée de broches</strong> : sur la breadboard, l'ESP32 ne laisse qu'une rangée libre, d'un seul côté. Toutes les broches utilisées sont donc du même côté de la carte (VIN, GND, 14, 27, 26, 25, 33, 34).</li>
-    <li><strong>Pont diviseur du MQ-2</strong> : le MQ-2 doit être alimenté en 5 V (sa résistance chauffante ne chauffe pas assez en 3,3 V), donc sa sortie AO peut atteindre 5 V alors que les entrées de l'ESP32 supportent 3,6 V au maximum. Avec 10 kΩ et 20 kΩ (deux 10 kΩ en série) : <code>5 V × 20 / (10 + 20) = 3,33 V</code>. Le firmware recalcule la tension réelle (× 1,5).</li>
+    <li><strong>MQ-2 en 5 V, AO en direct</strong> : le MQ-2 doit être alimenté en 5 V (sa résistance chauffante ne chauffe pas assez en 3,3 V). En air propre, sa sortie AO reste à quelques centaines de mV, bien dans la plage de l'ADC (0 à ~3,1 V) : elle est branchée directement sur GPIO 34 et le firmware publie la tension lue (facteur <code>MQ2_DIVIDER</code> = 1). Sous une forte concentration de gaz, AO peut dépasser 3,3 V (voir les limites, section 12).</li>
     <li><strong>ADC1 (GPIO 32 à 39)</strong> : les broches de l'ADC2 ne sont plus lisibles quand le Wi-Fi est actif ; GPIO 34 est sur l'ADC1.</li>
     <li><strong>DHT22 alimenté par GPIO 33</strong> : la broche 3V3 est de l'autre côté de la carte. Une sortie à l'état haut fournit 3,3 V et une vingtaine de mA, le capteur en consomme ~1,5 mA. Un pont de résistances ne conviendrait pas (sa tension chute dès que le capteur consomme), et le 5 V mettrait DATA à 5 V sur l'ESP32. Bonus : le firmware peut couper et rallumer le capteur.</li>
     <li><strong>LED</strong> : 220 Ω en série visés (environ 6 mA sous 3,3 V). Seules des 10 kΩ étaient disponibles : les LED fonctionnent mais éclairent faiblement (~0,15 mA).</li>
@@ -533,6 +533,7 @@ PermitRootLogin no
     <tr><td>Authentification du nœud par mot de passe</td><td>Mot de passe lisible dans la mémoire flash si l'ESP32 est volé</td><td>Certificat client par nœud (mTLS), chiffrement de la flash</td></tr>
     <tr><td>Clé d'accès dans l'URL du WebSocket et du flux vidéo</td><td>Les navigateurs ne permettent pas d'en-tête ; la clé est exclue des journaux</td><td>Jeton court à usage unique</td></tr>
     <tr><td>Dashboard en HTTP</td><td>Acceptable car limité à <code>127.0.0.1</code></td><td>HTTPS avec la CA locale si l'accès distant devient nécessaire</td></tr>
+    <tr><td>MQ-2 branché sans pont diviseur</td><td>Sous gaz fort, AO peut dépasser 3,3 V : l'ADC sature vers 3,1 V et l'entrée de l'ESP32 n'est pas protégée</td><td>Pont diviseur 10 kΩ / 20 kΩ (facteur 1,5 dans le firmware), puis réentraînement de l'IA sur la nouvelle échelle</td></tr>
     <tr><td>MQ-2 non étalonné</td><td>Valeurs relatives (mV), pas de ppm</td><td>Étalonnage en air propre (R0), puis conversion par courbe</td></tr>
     <tr><td>Filtre de lumière de la vision</td><td>Une personne très proche (plus de 40 % de l'image) peut être ignorée</td><td>Ajuster le seuil, ou lancer YOLO périodiquement</td></tr>
     <tr><td>Modèle IA entraîné sur peu de données</td><td>Variations jour / nuit pas encore apprises</td><td>Collecter plusieurs jours, réentraîner régulièrement</td></tr>
