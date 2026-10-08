@@ -12,11 +12,12 @@ docker compose up -d
 ```
 
 - `gen-certs.sh` keeps the CA key in `certs/ca/` (never mounted in a container) and puts `ca.crt`, `server.crt` and `server.key` in `config/mosquitto/certs/`. Copy `certs/ca/ca.crt` into the firmware's `include/secrets.h`. Re-run it if the server IP changes; the CA is reused.
+- **Start the hotspot before the stack**: `mqtt-broker` binds `192.168.10.1:18883` and fails to start ("cannot assign requested address") if that address does not exist yet. To test without the hotspot, set `MQTT_BIND_IP=127.0.0.1` in `.env`.
 - After editing MQTT accounts in `.env`, re-run `mqtt-passwd.sh` and `docker compose restart mqtt-broker`.
 - `history-db-init` runs on every `up` and sets up CouchDB (idempotent). The backend waits for it.
 - Dashboard: `http://localhost:10443`, **on the server PC only** (published on `127.0.0.1`). To open it from another machine, change the `ports` line of the `dashboard` service (`10443:8080`) or use an SSH tunnel (`ssh -L 10443:127.0.0.1:10443 <server>`). The access key is `API_OPERATOR_TOKEN` (full access) or `API_SERVICE_TOKEN` (read-only). The AI services use `API_SERVICE_TOKEN` to `POST /api/v1/alerts` on `http://backend:5000` (API reference in the `backend` README).
 - Certificates, `passwd` and `.env` are git-ignored: never commit them.
-- Only two ports are published: MQTTS `18883` for the nodes and the dashboard on `127.0.0.1:10443`. Training data comes from the dashboard's **Export CSV** button (backend `GET /api/v1/devices/{id}/export.csv`), or from inside the stack (`docker compose run --rm ia-prediction python entrainement.py --source couchdb`). CouchDB admin, when needed: `docker compose exec history-db curl -s -u "admin:<password>" http://localhost:5984/_all_dbs`.
+- Only two ports are published: MQTTS `18883` for the nodes, **on the hotspot address only** (`192.168.10.1`, `MQTT_BIND_IP` in `.env`), and the dashboard on `127.0.0.1:10443`. Training data comes from the dashboard's **Export CSV** button (backend `GET /api/v1/devices/{id}/export.csv`), or from inside the stack (`docker compose run --rm ia-prediction python entrainement.py --source couchdb`). CouchDB admin, when needed: `docker compose exec history-db curl -s -u "admin:<password>" http://localhost:5984/_all_dbs`.
 
 ## Security
 

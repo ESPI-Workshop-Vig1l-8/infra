@@ -8,7 +8,9 @@ services:
       - mqtt--sensors
       - mqtt--backend
     ports:
-      - 18883:8883   # MQTTS for the sensor nodes (TLS)
+      # MQTTS for the sensor nodes (TLS), only on the hotspot address: Docker bypasses the host firewall,
+      # so this binding is what keeps the port off the other networks (school Wi-Fi, Ethernet)
+      - ${MQTT_BIND_IP:-192.168.10.1}:18883:8883
     logging:
       driver: json-file
       options:
