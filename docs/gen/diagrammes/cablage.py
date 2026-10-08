@@ -68,7 +68,7 @@ def led(x, y, color):
 
 
 # --- en-tête et légende -------------------------------------------------------
-text(W / 2, 30, "Sentinel-X — câblage du nœud VIG1L-8-NODE04 (ESP32)", 18, "middle", "bold")
+text(W / 2, 30, "Sentinel-X - câblage du nœud VIG1L-8-NODE04 (ESP32)", 18, "middle", "bold")
 text(W / 2, 52, "Deux étiquettes de même nom sont reliées · GND commun à tous les composants · LED : patte longue (anode) côté résistance", 12, "middle", color="#546e7a", italic=True)
 
 # --- ESP32 ----------------------------------------------------------------------
@@ -103,17 +103,17 @@ def component(y, h, title, pin_list, notes):
         text(cx + 120, y + 46 + i * 18, n, 11, color="#546e7a")
 
 
-component(80, 130, "DHT22 — température / humidité",
+component(80, 130, "DHT22 - température / humidité",
           [("VCC", "GPIO33"), ("DATA", "GPIO27"), ("GND", "GND")],
           ["Alimenté par GPIO 33 (3,3 V,", "~1,5 mA) : redémarrable", "par le firmware. Capteur nu :", "pull-up 10 kΩ DATA → VCC."])
 
-component(230, 130, "HC-SR501 — présence (PIR)",
+component(230, 130, "HC-SR501 - présence (PIR)",
           [("VCC", "5V"), ("OUT", "GPIO14"), ("GND", "GND")],
           ["Sortie 3,3 V, alimentation 5 V.", "Cavalier sur H (re-déclenchable),", "potentiomètre Tx au minimum.", "Préchauffage : 30 s."])
 
 # MQ-2 : AO branché en direct sur GPIO 34
 my = 380
-box(cx, my, cw, 150, "MQ-2 — gaz / fumées")
+box(cx, my, cw, 150, "MQ-2 - gaz / fumées")
 for i, (label, name) in enumerate([("VCC", "5V"), ("GND", "GND")]):
     py = my + 46 + i * 30
     out.append(f'<circle cx="{cx}" cy="{py}" r="4" fill="{NETS[name]}"/>')

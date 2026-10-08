@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
 <meta charset="utf-8">
-<title>Workshop2026-M1-G04 — Rapport d'ingénierie technique — Sentinel-X</title>
+<title>Workshop2026-M1-G04 - Rapport d'ingénierie technique - Sentinel-X</title>
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -10,13 +10,13 @@
 <!-- ======================================================================= -->
 <section class="cover">
   <div class="top">
-    <div class="org">EPSI — Workshop national Bac+4 · Octobre 2026</div>
+    <div class="org">EPSI - Workshop national Bac+4 · Octobre 2026</div>
     <h1 class="title">Mission Sentinel-X</h1>
-    <div class="subtitle">Rapport d'ingénierie technique — consortium VIG1L-8 (AetherCorp)</div>
+    <div class="subtitle">Rapport d'ingénierie technique - consortium VIG1L-8 (AetherCorp)</div>
     <table>
       <tr><th style="width:32%">Groupe</th><td>G04</td></tr>
       <tr><th>Nœud</th><td>VIG1L-8-NODE04 (ESP32)</td></tr>
-      <tr><th>Option matérielle</th><td>B — Topologie distribuée « Edge-to-Server » : PC Serveur Local = ordinateur portable Linux d'un membre du groupe</td></tr>
+      <tr><th>Option matérielle</th><td>B - Topologie distribuée « Edge-to-Server » : PC Serveur Local = ordinateur portable Linux d'un membre du groupe</td></tr>
       <tr><th>Dépôts</th><td>github.com/ESPI-Workshop-Vig1l-8 : <code>infra</code>, <code>backend</code>, <code>dashboard</code>, <code>firmware</code>, <code>IA_Vision</code>, <code>IA_Predictions</code></td></tr>
     </table>
     <h3>Équipe</h3>
@@ -69,7 +69,7 @@
     <div class="kpi"><b>TLS 1.2+</b><span>de l'ESP32 au broker, CA locale vérifiée par le nœud</span></div>
     <div class="kpi"><b>2 niveaux</b><span>d'alerte IA : avertissement puis confirmation (LED du nœud)</span></div>
     <div class="kpi"><b>10 / 10</b><span>dérives lentes détectées (données simulées), 0,07 % de fausses alertes</span></div>
-    <div class="kpi"><b>37 ms</b><span>par image pour la vision (PC de développement, CPU) — objectif &lt; 100 ms</span></div>
+    <div class="kpi"><b>37 ms</b><span>par image pour la vision (PC de développement, CPU) - objectif &lt; 100 ms</span></div>
   </div>
   <p class="ai-note">Réalisation assistée par IA (Claude Code) pour la gestion git, le code du frontend et du backend, et les tests du backend Go et de l'API.</p>
   <h2>Ce qui est livré</h2>
@@ -112,7 +112,7 @@
     <tr><th>Prévu par le sujet</th><th>Utilisé</th><th>Raison et conséquences</th></tr>
     <tr><td>ESP8266</td><td><strong>ESP32</strong> (DevKit)</td><td>Seul microcontrôleur disponible. Avantages : plus de broches, ADC 12 bits (ADC1 utilisable avec le Wi-Fi), pile TLS plus confortable (mbedTLS).</td></tr>
     <tr><td>Buzzer piézoélectrique</td><td><strong>2 LED</strong> (mouvement, environnement)</td><td>Plus de buzzers disponibles. La LED environnement porte les alertes : fixe = premier avertissement local, clignotante = alerte confirmée par l'IA.</td></tr>
-    <tr><td>Écran OLED I2C</td><td>—</td><td>Plus d'écrans disponibles. L'état du nœud (IP, connexion, mesures) est visible sur le dashboard et le moniteur série.</td></tr>
+    <tr><td>Écran OLED I2C</td><td>-</td><td>Plus d'écrans disponibles. L'état du nœud (IP, connexion, mesures) est visible sur le dashboard et le moniteur série.</td></tr>
   </table>
   <h2>2.4 Principes de conception</h2>
   <ul>
@@ -134,19 +134,19 @@
     <tr><th>Élément</th><th>Valeur</th><th>Justification</th></tr>
     <tr><td>Réseau</td><td><code>192.168.10.0/24</code>, SSID <code>VIGIL8_HOTSPOT</code></td><td>Réseau dédié à la table, isolé des autres groupes</td></tr>
     <tr><td>Sécurité Wi-Fi</td><td>WPA2-PSK, bande <strong>2,4 GHz</strong></td><td>L'ESP32 ne capte pas le 5 GHz</td></tr>
-    <tr><td>PC Serveur Local</td><td><code>192.168.10.1</code> — passerelle et DHCP</td><td>Adresse inscrite dans le certificat TLS du broker</td></tr>
+    <tr><td>PC Serveur Local</td><td><code>192.168.10.1</code> - passerelle et DHCP</td><td>Adresse inscrite dans le certificat TLS du broker</td></tr>
     <tr><td>Nœud ESP32</td><td><code>192.168.10.5</code> (IP fixe)</td><td>Hors de la plage DHCP : aucun conflit possible avec un autre client</td></tr>
     <tr><td>Plage DHCP</td><td><code>192.168.10.10</code> à <code>.254</code></td><td>Clients occasionnels (aucun service ne leur est destiné)</td></tr>
   </table>
   <figure class="wide">
     <img src="diagrammes/reseau.svg" alt="Schéma réseau de la table">
-    <figcaption>Figure 1 — Réseau de table : seul le port MQTTS 18883 est exposé au réseau ; le dashboard n'écoute que sur la boucle locale du serveur (option B : l'opérateur travaille sur le portable qui sert de serveur).</figcaption>
+    <figcaption>Figure 1 - Réseau de table : seul le port MQTTS 18883 est exposé au réseau ; le dashboard n'écoute que sur la boucle locale du serveur (option B : l'opérateur travaille sur le portable qui sert de serveur).</figcaption>
   </figure>
   <h2>3.2 Matrice des flux</h2>
   <table>
     <tr><th>Source → destination</th><th>Port / protocole</th><th>Chiffrement</th><th>Authentification</th><th>Exposition</th></tr>
     <tr><td>ESP32 → broker</td><td>18883/tcp (→ 8883) MQTT</td><td>TLS 1.2+, CA locale</td><td>compte du nœud + ACL</td><td>réseau de table</td></tr>
-    <tr><td>Navigateur → dashboard</td><td>10443/tcp HTTP</td><td>— (boucle locale)</td><td>clé d'accès (jeton API)</td><td><code>127.0.0.1</code> uniquement</td></tr>
+    <tr><td>Navigateur → dashboard</td><td>10443/tcp HTTP</td><td>- (boucle locale)</td><td>clé d'accès (jeton API)</td><td><code>127.0.0.1</code> uniquement</td></tr>
     <tr><td>backend ↔ broker</td><td>1883/tcp MQTT</td><td>réseau Docker interne</td><td>compte <code>backend</code></td><td>non publié</td></tr>
     <tr><td>backend → CouchDB</td><td>5984/tcp HTTP</td><td>réseau Docker interne</td><td>utilisateur <code>backend</code> (écriture)</td><td>non publié</td></tr>
     <tr><td>ia-prediction → CouchDB</td><td>5984/tcp HTTP</td><td>réseau Docker interne</td><td>utilisateur <code>ia</code> (lecture seule)</td><td>non publié</td></tr>
@@ -173,13 +173,13 @@
     <tr><td>DHT22</td><td>Température, humidité (1 lecture / 2 s max)</td><td>3,3 V par GPIO 33</td><td>GPIO 27</td></tr>
     <tr><td>MQ-2</td><td>Gaz combustibles, fumées (sortie analogique AO)</td><td>5 V (chauffe ~150 mA)</td><td>GPIO 34 (ADC1), en direct</td></tr>
     <tr><td>HC-SR501</td><td>Présence infrarouge (sortie 3,3 V)</td><td>5 V</td><td>GPIO 14</td></tr>
-    <tr><td>LED mouvement + résistance</td><td>Allumée pendant une détection du PIR</td><td>—</td><td>GPIO 25</td></tr>
-    <tr><td>LED environnement + résistance</td><td>Fixe : plafond local ; clignotante : alerte IA</td><td>—</td><td>GPIO 26</td></tr>
-    <tr><td>LED intégrée</td><td>Suit le PIR</td><td>—</td><td>GPIO 2</td></tr>
+    <tr><td>LED mouvement + résistance</td><td>Allumée pendant une détection du PIR</td><td>-</td><td>GPIO 25</td></tr>
+    <tr><td>LED environnement + résistance</td><td>Fixe : plafond local ; clignotante : alerte IA</td><td>-</td><td>GPIO 26</td></tr>
+    <tr><td>LED intégrée</td><td>Suit le PIR</td><td>-</td><td>GPIO 2</td></tr>
   </table>
   <figure class="wide">
     <img src="diagrammes/cablage.svg" alt="Schéma de câblage du nœud" style="max-height: 150mm; width: auto">
-    <figcaption>Figure 2 — Câblage du nœud VIG1L-8-NODE04 (source : <code>firmware/include/config.h</code>).</figcaption>
+    <figcaption>Figure 2 - Câblage du nœud VIG1L-8-NODE04 (source : <code>firmware/include/config.h</code>).</figcaption>
   </figure>
   <h2>4.2 Choix électroniques</h2>
   <ul>
@@ -230,16 +230,16 @@
   <table>
     <tr><th>Service</th><th>Image / technologie</th><th>Rôle</th><th>Utilisateur</th><th>Exposition</th></tr>
     <tr><td><code>mqtt-broker</code></td><td>Mosquitto 2.1 (digest épinglé)</td><td>Broker MQTT : TLS 8883 pour les nœuds, 1883 interne</td><td>mosquitto (1883)</td><td>192.168.10.1:18883 → 8883</td></tr>
-    <tr><td><code>history-db</code></td><td>CouchDB 3.5 (digest épinglé)</td><td>Base documentaire : <code>telemetry</code>, <code>events</code></td><td>couchdb (5984)</td><td>— (réseaux internes)</td></tr>
-    <tr><td><code>history-db-init</code></td><td>CouchDB (curl)</td><td>Job au démarrage : bases, comptes, droits, vues</td><td>couchdb (5984)</td><td>—</td></tr>
-    <tr><td><code>backend</code></td><td>Go 1.26, binaire statique</td><td>Ingestion MQTT, API REST, WebSocket</td><td>sentinel (10001)</td><td>—</td></tr>
+    <tr><td><code>history-db</code></td><td>CouchDB 3.5 (digest épinglé)</td><td>Base documentaire : <code>telemetry</code>, <code>events</code></td><td>couchdb (5984)</td><td>- (réseaux internes)</td></tr>
+    <tr><td><code>history-db-init</code></td><td>CouchDB (curl)</td><td>Job au démarrage : bases, comptes, droits, vues</td><td>couchdb (5984)</td><td>-</td></tr>
+    <tr><td><code>backend</code></td><td>Go 1.26, binaire statique</td><td>Ingestion MQTT, API REST, WebSocket</td><td>sentinel (10001)</td><td>-</td></tr>
     <tr><td><code>dashboard</code></td><td>React 19 + Vite, nginx non privilégié</td><td>Interface, proxy <code>/api</code>, <code>/ws</code>, <code>/vision/</code></td><td>nginx (101)</td><td>127.0.0.1:10443</td></tr>
-    <tr><td><code>ia-prediction</code></td><td>Python 3.12, scikit-learn 1.9</td><td>Isolation Forest en temps réel</td><td>ia (10001)</td><td>—</td></tr>
-    <tr><td><code>ia-vision</code></td><td>Python 3.12, PyTorch CPU, YOLOv8n</td><td>Détection d'intrusion, flux MJPEG</td><td>vision (10001)</td><td>— (webcam <code>/dev/video0</code>)</td></tr>
+    <tr><td><code>ia-prediction</code></td><td>Python 3.12, scikit-learn 1.9</td><td>Isolation Forest en temps réel</td><td>ia (10001)</td><td>-</td></tr>
+    <tr><td><code>ia-vision</code></td><td>Python 3.12, PyTorch CPU, YOLOv8n</td><td>Détection d'intrusion, flux MJPEG</td><td>vision (10001)</td><td>- (webcam <code>/dev/video0</code>)</td></tr>
   </table>
   <figure>
     <img src="diagrammes/infrastructure.svg" alt="Schéma de l'infrastructure Docker" style="max-height: 175mm">
-    <figcaption>Figure 3 — Conteneurs, réseaux Docker et sens des échanges. Chaque réseau relie une paire de services.</figcaption>
+    <figcaption>Figure 3 - Conteneurs, réseaux Docker et sens des échanges. Chaque réseau relie une paire de services.</figcaption>
   </figure>
   <h2>5.2 Données</h2>
   <ul>
@@ -276,7 +276,7 @@ docker compose up -d                  # puis hors ligne, sur le hotspot</code></
   <h2>6.1 Connexion du nœud et télémétrie</h2>
   <figure>
     <img src="diagrammes/seq-telemetrie.svg" alt="Séquence de télémétrie" style="max-height: 150mm">
-    <figcaption>Figure 4 — Connexion TLS du nœud, télémétrie toutes les 2 s, événement PIR, déconnexion (LWT).</figcaption>
+    <figcaption>Figure 4 - Connexion TLS du nœud, télémétrie toutes les 2 s, événement PIR, déconnexion (LWT).</figcaption>
   </figure>
   <p>
     Le backend est le seul abonné à tous les nœuds. Il valide chaque message, ajoute l'heure de réception, le pousse immédiatement
@@ -286,12 +286,12 @@ docker compose up -d                  # puis hors ligne, sur le hotspot</code></
   <h2>6.2 Maintenance prédictive : alertes à deux niveaux</h2>
   <figure>
     <img src="diagrammes/seq-alertes.svg" alt="Séquence des alertes de prédiction" style="max-height: 160mm">
-    <figcaption>Figure 5 — De la mesure en base à la LED du nœud : avertissement, confirmation, acquittement.</figcaption>
+    <figcaption>Figure 5 - De la mesure en base à la LED du nœud : avertissement, confirmation, acquittement.</figcaption>
   </figure>
   <h2>6.3 Vision : intrusion et flux vidéo</h2>
   <figure>
     <img src="diagrammes/seq-vision.svg" alt="Séquence de la vision" style="max-height: 120mm">
-    <figcaption>Figure 6 — Détection d'intrusion et affichage du flux, protégé par la clé d'accès.</figcaption>
+    <figcaption>Figure 6 - Détection d'intrusion et affichage du flux, protégé par la clé d'accès.</figcaption>
   </figure>
 </section>
 
@@ -305,7 +305,7 @@ docker compose up -d                  # puis hors ligne, sur le hotspot</code></
     <tr><td><code>GET /api/v1/devices</code></td><td>service</td><td>état temps réel des nœuds</td></tr>
     <tr><td><code>GET /api/v1/devices/{id}/telemetry</code></td><td>service</td><td>historique brut (≤ 6 h) ou agrégé par minute / heure</td></tr>
     <tr><td><code>GET /api/v1/devices/{id}/export.csv</code></td><td>service</td><td>CSV d'entraînement de l'Isolation Forest</td></tr>
-    <tr><td><code>POST /api/v1/alerts</code></td><td>service</td><td>alerte de l'IA (<code>warning</code> / <code>confirmed</code>) — point d'entrée obligatoire du sujet</td></tr>
+    <tr><td><code>POST /api/v1/alerts</code></td><td>service</td><td>alerte de l'IA (<code>warning</code> / <code>confirmed</code>) - point d'entrée obligatoire du sujet</td></tr>
     <tr><td><code>POST /api/v1/alerts/{id}/ack</code></td><td>opérateur</td><td>acquittement</td></tr>
     <tr><td><code>POST /api/v1/annotations</code></td><td>opérateur</td><td>période de test (exclue de l'entraînement)</td></tr>
     <tr><td><code>POST /api/v1/devices/{id}/command</code></td><td>opérateur</td><td>LED environnement du nœud</td></tr>
@@ -329,7 +329,7 @@ docker compose up -d                  # puis hors ligne, sur le hotspot</code></
   </ul>
   <figure class="wide">
     <img src="images/dashboard.png" alt="Dashboard Sentinel-X en fonctionnement">
-    <figcaption>Figure 7 — Dashboard en fonctionnement : intrusion confirmée par la vision (bandeau et état « ALERTE »), alertes à acquitter, historique d'une heure et flux de la webcam annoté.</figcaption>
+    <figcaption>Figure 7 - Dashboard en fonctionnement : intrusion confirmée par la vision (bandeau et état « ALERTE »), alertes à acquitter, historique d'une heure et flux de la webcam annoté.</figcaption>
   </figure>
 </section>
 

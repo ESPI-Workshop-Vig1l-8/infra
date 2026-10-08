@@ -3,9 +3,9 @@ flowchart TB
   cam["Webcam<br/>/dev/video0"]
   nav["Navigateur<br/>127.0.0.1:10443<br/>(seul port HTTP publié)"]
 
-  subgraph host["PC Serveur Local — Docker Compose (conteneurs non root)"]
+  subgraph host["PC Serveur Local - Docker Compose (conteneurs non root)"]
     broker["mqtt-broker<br/>Mosquitto 2.1<br/>8883 TLS · 1883 interne"]
-    backend["backend<br/>Go — API REST + WebSocket"]
+    backend["backend<br/>Go - API REST + WebSocket"]
     couch[("history-db<br/>CouchDB 3.5<br/>telemetry · events")]
     init["history-db-init<br/>(job au démarrage)"]
     pred["ia-prediction<br/>Isolation Forest"]

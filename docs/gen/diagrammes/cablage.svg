@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 860" width="1000" height="860" font-family="DejaVu Sans, Arial, sans-serif">
 <rect width="1000" height="860" fill="#ffffff"/>
-<text x="500.0" y="30" font-size="18" text-anchor="middle" font-weight="bold" fill="#212121">Sentinel-X — câblage du nœud VIG1L-8-NODE04 (ESP32)</text>
+<text x="500.0" y="30" font-size="18" text-anchor="middle" font-weight="bold" fill="#212121">Sentinel-X - câblage du nœud VIG1L-8-NODE04 (ESP32)</text>
 <text x="500.0" y="52" font-size="12" text-anchor="middle" font-weight="normal" fill="#546e7a" font-style="italic">Deux étiquettes de même nom sont reliées · GND commun à tous les composants · LED : patte longue (anode) côté résistance</text>
 <rect x="40" y="90" width="250" height="570" rx="8" fill="#eceff1" stroke="#455a64" stroke-width="2"/>
 <text x="165.0" y="112" font-size="15" text-anchor="middle" font-weight="bold" fill="#212121">ESP32 DevKit (esp32dev)</text>
@@ -49,7 +49,7 @@
 <text x="56" y="620" font-size="11" text-anchor="start" font-weight="normal" fill="#455a64">USB : alimentation 5 V + programmation</text>
 <text x="56" y="638" font-size="11" text-anchor="start" font-weight="normal" fill="#455a64">Wi-Fi 2,4 GHz → hotspot 192.168.10.0/24</text>
 <rect x="640" y="80" width="320" height="130" rx="8" fill="#fafafa" stroke="#455a64" stroke-width="2"/>
-<text x="800.0" y="102" font-size="15" text-anchor="middle" font-weight="bold" fill="#212121">DHT22 — température / humidité</text>
+<text x="800.0" y="102" font-size="15" text-anchor="middle" font-weight="bold" fill="#212121">DHT22 - température / humidité</text>
 <circle cx="640" cy="126" r="4" fill="#ef6c00"/>
 <text x="652" y="130" font-size="12" text-anchor="start" font-weight="bold" fill="#212121">VCC</text>
 <line x1="604" y1="126" x2="640" y2="126" stroke="#ef6c00" stroke-width="2" stroke-linecap="round"/>
@@ -70,7 +70,7 @@
 <text x="760" y="162" font-size="11" text-anchor="start" font-weight="normal" fill="#546e7a">par le firmware. Capteur nu :</text>
 <text x="760" y="180" font-size="11" text-anchor="start" font-weight="normal" fill="#546e7a">pull-up 10 kΩ DATA → VCC.</text>
 <rect x="640" y="230" width="320" height="130" rx="8" fill="#fafafa" stroke="#455a64" stroke-width="2"/>
-<text x="800.0" y="252" font-size="15" text-anchor="middle" font-weight="bold" fill="#212121">HC-SR501 — présence (PIR)</text>
+<text x="800.0" y="252" font-size="15" text-anchor="middle" font-weight="bold" fill="#212121">HC-SR501 - présence (PIR)</text>
 <circle cx="640" cy="276" r="4" fill="#c62828"/>
 <text x="652" y="280" font-size="12" text-anchor="start" font-weight="bold" fill="#212121">VCC</text>
 <line x1="604" y1="276" x2="640" y2="276" stroke="#c62828" stroke-width="2" stroke-linecap="round"/>
@@ -91,7 +91,7 @@
 <text x="760" y="312" font-size="11" text-anchor="start" font-weight="normal" fill="#546e7a">potentiomètre Tx au minimum.</text>
 <text x="760" y="330" font-size="11" text-anchor="start" font-weight="normal" fill="#546e7a">Préchauffage : 30 s.</text>
 <rect x="640" y="380" width="320" height="150" rx="8" fill="#fafafa" stroke="#455a64" stroke-width="2"/>
-<text x="800.0" y="402" font-size="15" text-anchor="middle" font-weight="bold" fill="#212121">MQ-2 — gaz / fumées</text>
+<text x="800.0" y="402" font-size="15" text-anchor="middle" font-weight="bold" fill="#212121">MQ-2 - gaz / fumées</text>
 <circle cx="640" cy="426" r="4" fill="#c62828"/>
 <text x="652" y="430" font-size="12" text-anchor="start" font-weight="bold" fill="#212121">VCC</text>
 <line x1="604" y1="426" x2="640" y2="426" stroke="#c62828" stroke-width="2" stroke-linecap="round"/>
