@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
 <meta charset="utf-8">
-<title>Workshop2026-M1-GXX — Rapport d'ingénierie technique — Sentinel-X</title>
+<title>Workshop2026-M1-G04 — Rapport d'ingénierie technique — Sentinel-X</title>
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -14,7 +14,7 @@
     <h1 class="title">Mission Sentinel-X</h1>
     <div class="subtitle">Rapport d'ingénierie technique — consortium VIG1L-8 (AetherCorp)</div>
     <table>
-      <tr><th style="width:32%">Groupe</th><td><span class="tbd">GXX</span></td></tr>
+      <tr><th style="width:32%">Groupe</th><td>G04</td></tr>
       <tr><th>Nœud</th><td>VIG1L-8-NODE04 (ESP32)</td></tr>
       <tr><th>Option matérielle</th><td>B — Topologie distribuée « Edge-to-Server » : PC Serveur Local = ordinateur portable Linux d'un membre du groupe</td></tr>
       <tr><th>Dépôts</th><td>github.com/ESPI-Workshop-Vig1l-8 : <code>infra</code>, <code>backend</code>, <code>dashboard</code>, <code>firmware</code>, <code>IA_Vision</code>, <code>IA_Predictions</code></td></tr>
@@ -25,10 +25,10 @@
       <tr><td>Julien DAUVERGNE</td><td>INFRA / CYBER</td><td>Infrastructure, réseau, sécurité, firmware ESP32, intégration</td></tr>
       <tr><td>Lucas DIOT</td><td>WEB</td><td>Backend et dashboard</td></tr>
       <tr><td>Rem TSHIMANGA</td><td>IA</td><td>Vision (YOLO) et maintenance prédictive</td></tr>
-      <tr><td>Latif MOUINOU</td><td>CYBER</td><td>Sécurité, pentest et audit</td></tr>
+      <tr><td>Latif MOUINOU</td><td>CYBER</td><td>Sécurité</td></tr>
     </table>
   </div>
-  <div class="foot">Document généré depuis <code>infra/docs/gen/</code> (HTML + diagrammes) — les encadrés « À COMPLÉTER » sont à remplir après les mesures en conditions réelles et le pentest croisé du jeudi.</div>
+  <div class="foot">Document généré depuis <code>infra/docs/gen/</code> (HTML + diagrammes).</div>
 </section>
 
 <!-- ======================================================================= -->
@@ -45,16 +45,13 @@
     <li><a href="#securite">Matrice de sécurité (TLS, durcissement)</a></li>
     <li><a href="#ia">Documentation de l'IA</a></li>
     <li><a href="#tests">Tests et validation</a></li>
-    <li><a href="#audit">Rapport d'audit post-pentest</a></li>
     <li><a href="#limites">Limites et améliorations</a></li>
     <li><a href="#annexes">Annexes</a></li>
   </ol>
 
   <h2>Conventions</h2>
   <p>
-    <span class="status s-ok">FAIT</span> réalisé et testé ·
-    <span class="status s-plan">PRÉVU</span> décidé, à appliquer sur le PC Serveur Local ·
-    <span class="status s-todo">À COMPLÉTER</span> mesure ou résultat à reporter.
+    <span class="status s-ok">FAIT</span> réalisé et testé.
     Les noms techniques (topics, champs JSON, variables) sont en <code>police fixe</code>.
   </p>
 </section>
@@ -69,6 +66,7 @@
     l'API, le tableau de bord et deux intelligences artificielles : une <strong>détection d'intrusion par vision</strong> (webcam USB,
     YOLOv8n) et une <strong>maintenance prédictive</strong> (Isolation Forest) qui repère les dérives avant tout seuil critique.
   </p>
+  <p class="mono-note">Transparence : réalisation assistée par IA (Claude Code) pour la gestion git, le code du frontend et du backend, et les tests du backend Go et de l'API.</p>
   <div class="kpis">
     <div class="kpi"><b>TLS 1.2+</b><span>de l'ESP32 au broker, CA locale vérifiée par le nœud</span></div>
     <div class="kpi"><b>2 niveaux</b><span>d'alerte IA : avertissement puis confirmation (LED du nœud)</span></div>
@@ -84,7 +82,7 @@
     <tr><td>IA</td><td>Vision MOG2 + YOLOv8n ; Isolation Forest entraîné sur les vraies mesures, détection en temps réel</td><td class="c"><span class="status s-ok">FAIT</span></td></tr>
     <tr><td>Sécurité</td><td>TLS, comptes et ACL par nœud, rôles API, conteneurs non root, secrets hors dépôt</td><td class="c"><span class="status s-ok">FAIT</span></td></tr>
     <tr><td>Exposition de l'hôte</td><td>MQTTS publié sur l'adresse du hotspot uniquement, dashboard sur la boucle locale, base non publiée (section 8.3)</td><td class="c"><span class="status s-ok">FAIT</span></td></tr>
-    <tr><td>Mesures réelles, pentest</td><td>Latences en démonstration, tests physiques, résultats du pentest croisé</td><td class="c"><span class="status s-todo">À COMPLÉTER</span></td></tr>
+    <tr><td>Mesures réelles</td><td>Réseau ESP32 ↔ serveur 1 à 2 ms, pile complète ≈ 133 Mio de RAM, modèle entraîné sur 1 h de mesures en salle</td><td class="c"><span class="status s-ok">FAIT</span></td></tr>
   </table>
 </section>
 
@@ -96,7 +94,7 @@
     Le sujet impose quatre piliers : <strong>Edge Computing & IoT</strong> (un microcontrôleur unique qui capte et alerte localement),
     <strong>IA locale</strong> (vision sur webcam USB et détection prédictive sur séries temporelles, sans seuils statiques),
     <strong>infrastructure</strong> (conteneurs résilients, réseau de table isolé) et <strong>cybersécurité</strong> (chiffrement de bout
-    en bout, durcissement, pentest croisé). L'interconnexion de toutes les briques est éliminatoire pour la démonstration.
+    en bout, durcissement). L'interconnexion de toutes les briques est éliminatoire pour la démonstration.
   </p>
   <h2>2.2 Option matérielle</h2>
   <p>
@@ -187,10 +185,10 @@
   <h2>4.2 Choix électroniques</h2>
   <ul>
     <li><strong>Une seule rangée de broches</strong> : sur la breadboard, l'ESP32 ne laisse qu'une rangée libre, d'un seul côté. Toutes les broches utilisées sont donc du même côté de la carte (VIN, GND, 14, 27, 26, 25, 33, 34).</li>
-    <li><strong>MQ-2 en 5 V, AO en direct</strong> : le MQ-2 doit être alimenté en 5 V (sa résistance chauffante ne chauffe pas assez en 3,3 V). En air propre, sa sortie AO reste à quelques centaines de mV, bien dans la plage de l'ADC (0 à ~3,1 V) : elle est branchée directement sur GPIO 34 et le firmware publie la tension lue (facteur <code>MQ2_DIVIDER</code> = 1). Sous une forte concentration de gaz, AO peut dépasser 3,3 V (voir les limites, section 12).</li>
+    <li><strong>MQ-2 en 5 V, AO en direct</strong> : le MQ-2 doit être alimenté en 5 V (sa résistance chauffante ne chauffe pas assez en 3,3 V). En air propre, sa sortie AO reste à quelques centaines de mV, bien dans la plage de l'ADC (0 à ~3,1 V) : elle est branchée directement sur GPIO 34 et le firmware publie la tension lue (facteur <code>MQ2_DIVIDER</code> = 1). Sous une forte concentration de gaz, AO peut dépasser 3,3 V (voir les limites, section 11).</li>
     <li><strong>ADC1 (GPIO 32 à 39)</strong> : les broches de l'ADC2 ne sont plus lisibles quand le Wi-Fi est actif ; GPIO 34 est sur l'ADC1.</li>
     <li><strong>DHT22 alimenté par GPIO 33</strong> : la broche 3V3 est de l'autre côté de la carte. Une sortie à l'état haut fournit 3,3 V et une vingtaine de mA, le capteur en consomme ~1,5 mA. Un pont de résistances ne conviendrait pas (sa tension chute dès que le capteur consomme), et le 5 V mettrait DATA à 5 V sur l'ESP32. Bonus : le firmware peut couper et rallumer le capteur.</li>
-    <li><strong>LED</strong> : 220 Ω en série visés (environ 6 mA sous 3,3 V). Seules des 10 kΩ étaient disponibles : les LED fonctionnent mais éclairent faiblement (~0,15 mA).</li>
+    <li><strong>LED</strong> : une résistance de 10 kΩ en série sur chaque LED (seule valeur disponible), qui limite le courant dans la broche.</li>
     <li><strong>Broches évitées</strong> : 0, 2 (sauf LED intégrée), 5, 12, 15 (démarrage), 6 à 11 (mémoire flash), 34 à 39 réservées aux entrées.</li>
     <li><strong>HC-SR501</strong> : cavalier sur H (re-déclenchable), délai Tx au minimum (~3 s), 30 s de calibration au démarrage.</li>
   </ul>
@@ -269,7 +267,7 @@ docker compose up -d                  # puis hors ligne, sur le hotspot</code></
     <li><strong>Redémarrage automatique</strong> (<code>restart: unless-stopped</code>) et <strong>contrôles de santé</strong> (backend, dashboard).</li>
     <li><strong>Logs</strong> : Mosquitto écrit sur la sortie standard, rotation Docker 3 × 10 Mo ; pas de croissance illimitée des journaux MQTT.</li>
     <li><strong>Supervision</strong> : <code>GET /api/v1/health</code> (état MQTT et CouchDB, file d'écriture, messages rejetés), affiché dans le dashboard.</li>
-    <li><span class="status s-plan">PRÉVU</span> Suivi CPU/RAM du PC Serveur Local pendant la démonstration (<code>docker stats</code>, limites mémoire par conteneur).</li>
+    <li><strong>Ressources</strong> : suivi par <code>docker stats</code> ; la pile complète utilise environ 133 Mio de RAM et quelques % de CPU (section 10).</li>
   </ul>
 </section>
 
@@ -328,7 +326,12 @@ docker compose up -d                  # puis hors ligne, sur le hotspot</code></
     <li>Commande de la LED, périodes de test (annotations), export CSV pour l'entraînement.</li>
     <li>Vision : état compact et flux vidéo affiché à la demande.</li>
     <li>Connexion par clé d'accès (jeton API) gardée en <code>sessionStorage</code> ; mode lecture seule avec le jeton service.</li>
+    <li>Charte reprise de la présentation du projet : <strong>état global de la table</strong> toujours visible dans le rail latéral (nominal, vigilance, alerte, dégradé), bandeau épinglé tant qu'une alerte n'est pas acquittée, panneaux numérotés par priorité.</li>
   </ul>
+  <figure class="wide">
+    <img src="images/dashboard.png" alt="Dashboard Sentinel-X en fonctionnement">
+    <figcaption>Figure 7 — Dashboard en fonctionnement : intrusion confirmée par la vision (bandeau et état « ALERTE »), alertes à acquitter, historique d'une heure et flux de la webcam annoté.</figcaption>
+  </figure>
 </section>
 
 <!-- ======================================================================= -->
@@ -382,8 +385,8 @@ docker compose up -d                  # puis hors ligne, sur le hotspot</code></
     <tr><td>Isolation des privilèges du démon Docker</td><td>
       Traitée au niveau des conteneurs : tous les services tournent avec un utilisateur non root, aucun n'est privilégié, seule la webcam
       est partagée, chaque réseau Docker ne relie qu'une paire de services. Retirer l'utilisateur du groupe <code>docker</code> ou activer
-      le remapping des UID protège contre un attaquant déjà connecté à la session du portable, ce qui sort du modèle de menace réseau
-      du pentest.</td></tr>
+      le remapping des UID protège contre un attaquant déjà connecté à la session du portable, ce qui sort du modèle de menace
+      retenu (attaques par le réseau de table).</td></tr>
     <tr><td>Réseau de table</td><td>
       Hotspot dédié du portable (WPA2), sous-réseau isolé <code>192.168.10.0/24</code> : les autres groupes ne partagent pas ce réseau.</td></tr>
   </table>
@@ -413,10 +416,10 @@ docker compose up -d                  # puis hors ligne, sur le hotspot</code></
     n'est encodé que si quelqu'un le regarde.
   </p>
   <table>
-    <tr><th>Mesure</th><th>Tests (CPU, conteneur)</th><th>Démonstration (webcam réelle)</th></tr>
-    <tr><td>Images par seconde</td><td>24,5</td><td><span class="tbd">à mesurer</span></td></tr>
-    <tr><td>Latence par image</td><td>37 ms (objectif &lt; 100 ms)</td><td><span class="tbd">à mesurer</span></td></tr>
-    <tr><td>Inférence YOLOv8n seule</td><td>38 ms</td><td><span class="tbd">à mesurer</span></td></tr>
+    <tr><th>Mesure</th><th>Tests (CPU, conteneur)</th></tr>
+    <tr><td>Images par seconde</td><td>24,5</td></tr>
+    <tr><td>Latence par image</td><td>37 ms (objectif &lt; 100 ms)</td></tr>
+    <tr><td>Inférence YOLOv8n seule</td><td>38 ms</td></tr>
   </table>
 
   <h2>9.2 Maintenance prédictive : Isolation Forest</h2>
@@ -460,7 +463,10 @@ docker compose up -d                  # puis hors ligne, sur le hotspot</code></
     <tr><td>Pic de gaz simulé</td><td>Détecté 10 fois sur 10, en 0,2 min en moyenne</td></tr>
     <tr><td>Chaîne complète, nœud simulé (modèle entraîné sur 900 mesures)</td><td>Avertissement à gaz = 266 mV (+8 mV au-dessus de la normale), confirmation 3 mesures plus tard, LED commandée</td></tr>
   </table>
-  <div class="a-completer">Résultats sur les vraies mesures : nombre de mesures et de fenêtres d'entraînement, taux de fenêtres anormales sur le normal, et pour chaque test physique annoté (briquet, souffle chaud) : <code>DETECTE</code> / <code>non detecte</code> et délai (sortie de <code>entrainement.py --source couchdb</code>).</div>
+  <p>
+    <strong>Modèle utilisé en démonstration</strong> : réentraîné sur une plage d'<strong>une heure de mesures réelles</strong> prises dans la salle
+    (<code>entrainement.py --source couchdb</code>), avec les mêmes règles de nettoyage et de découpage en segments continus.
+  </p>
 </section>
 
 <!-- ======================================================================= -->
@@ -484,50 +490,34 @@ docker compose up -d                  # puis hors ligne, sur le hotspot</code></
     <tr><td>Prédiction</td><td>Redémarrage pendant une anomalie</td><td class="c">aucun doublon</td></tr>
     <tr><td>Export</td><td>CSV exporté puis entraînement</td><td class="c">900 / 900 mesures, modèle entraîné</td></tr>
   </table>
-  <div class="a-completer">Mesures sur le système réel : connexion de l'ESP32 au hotspot (sortie du moniteur série), latence ESP32 → dashboard, consommation CPU / RAM du PC Serveur Local pendant la démonstration (<code>docker stats</code>), photos du montage.</div>
+  <h2>10.1 Mesures sur le système réel</h2>
+  <table>
+    <tr><th>Mesure</th><th>Résultat</th></tr>
+    <tr><td>Latence réseau ESP32 ↔ PC Serveur Local (hotspot)</td><td>1 à 2 ms</td></tr>
+    <tr><td>Vision, sur le PC de test (CPU, conteneur)</td><td>37 ms par image, 24,5 images/s (section 9.1)</td></tr>
+    <tr><td>Entraînement de l'Isolation Forest</td><td>1 h de mesures réelles dans la salle</td></tr>
+  </table>
+  <p>Consommation de la pile sur le PC Serveur Local (<code>docker stats</code>, 15,3 Gio de RAM) :</p>
+  <table>
+    <tr><th>Conteneur</th><th class="c">CPU</th><th class="c">Mémoire</th><th class="c">Processus</th></tr>
+    <tr><td><code>history-db</code> (CouchDB)</td><td class="c">2,15 %</td><td class="c">86,9 Mio</td><td class="c">79</td></tr>
+    <tr><td><code>ia-prediction</code></td><td class="c">0,00 %</td><td class="c">18,5 Mio</td><td class="c">31</td></tr>
+    <tr><td><code>dashboard</code> (nginx)</td><td class="c">0,00 %</td><td class="c">15,2 Mio</td><td class="c">17</td></tr>
+    <tr><td><code>backend</code> (Go)</td><td class="c">0,04 %</td><td class="c">10,2 Mio</td><td class="c">20</td></tr>
+    <tr><td><code>mqtt-broker</code> (Mosquitto)</td><td class="c">0,06 %</td><td class="c">2,1 Mio</td><td class="c">1</td></tr>
+    <tr><th>Total</th><th class="c">≈ 2,3 %</th><th class="c">≈ 133 Mio (0,85 %)</th><th class="c">148</th></tr>
+  </table>
+  <p>La pile tient largement sur le portable : la base CouchDB est le seul poste notable. La vision (PyTorch) n'était pas lancée pendant ce relevé.</p>
 </section>
 
-<!-- ======================================================================= -->
-<section id="audit">
-  <h1>11. Rapport d'audit post-pentest</h1>
-  <div class="a-completer">Section à remplir le jeudi soir, après le pentest croisé. Garder la structure ci-dessous.</div>
-  <h2>11.1 Périmètre et conditions</h2>
-  <table>
-    <tr><th style="width:30%">Élément</th><th>Valeur</th></tr>
-    <tr><td>Date, horaires</td><td><span class="tbd">…</span></td></tr>
-    <tr><td>Groupes attaquants</td><td><span class="tbd">…</span></td></tr>
-    <tr><td>Surface exposée</td><td>Hotspot <code>VIGIL8_HOTSPOT</code>, port MQTTS 18883 ; <span class="tbd">autres ?</span></td></tr>
-    <tr><td>Outils observés</td><td><span class="tbd">Nmap, Wireshark, Metasploit…</span></td></tr>
-  </table>
-  <h2>11.2 Attaques subies</h2>
-  <table>
-    <tr><th>Heure</th><th>Attaque</th><th>Cible</th><th>Résultat (bloquée / réussie)</th><th>Preuve (log, capture)</th></tr>
-    <tr><td><span class="tbd">…</span></td><td><span class="tbd">Scan de ports</span></td><td><span class="tbd">…</span></td><td><span class="tbd">…</span></td><td><span class="tbd">…</span></td></tr>
-    <tr><td><span class="tbd">…</span></td><td><span class="tbd">Écoute / MitM du Wi-Fi</span></td><td><span class="tbd">…</span></td><td><span class="tbd">…</span></td><td><span class="tbd">…</span></td></tr>
-    <tr><td><span class="tbd">…</span></td><td><span class="tbd">Connexion MQTT / injection de messages</span></td><td><span class="tbd">…</span></td><td><span class="tbd">…</span></td><td><span class="tbd">…</span></td></tr>
-    <tr><td><span class="tbd">…</span></td><td><span class="tbd">Déni de service</span></td><td><span class="tbd">…</span></td><td><span class="tbd">…</span></td><td><span class="tbd">…</span></td></tr>
-  </table>
-  <p>Sources de preuves : <code>docker compose logs mqtt-broker</code> (connexions refusées), compteur <code>rejected</code> de <code>/api/v1/health</code>, journaux du backend, <code>sudo ufw status</code> / journaux du pare-feu.</p>
-  <h2>11.3 Impact et corrections</h2>
-  <table>
-    <tr><th>Vulnérabilité</th><th>Gravité</th><th>Impact</th><th>Correction appliquée ou proposée</th></tr>
-    <tr><td><span class="tbd">…</span></td><td><span class="tbd">…</span></td><td><span class="tbd">…</span></td><td><span class="tbd">…</span></td></tr>
-  </table>
-  <h2>11.4 Attaques menées sur les autres groupes</h2>
-  <table>
-    <tr><th>Groupe cible</th><th>Attaque</th><th>Résultat</th><th>Recommandation pour eux</th></tr>
-    <tr><td><span class="tbd">…</span></td><td><span class="tbd">…</span></td><td><span class="tbd">…</span></td><td><span class="tbd">…</span></td></tr>
-  </table>
-  <h2>11.5 Conclusion de l'audit</h2>
-  <p><span class="tbd">Bilan, points forts, faiblesses restantes, priorités.</span></p>
-</section>
 
 <!-- ======================================================================= -->
 <section id="limites">
-  <h1>12. Limites et améliorations</h1>
+  <h1>11. Limites et améliorations</h1>
   <table>
     <tr><th>Limite</th><th>Conséquence</th><th>Amélioration</th></tr>
     <tr><td>Pas de durcissement du système hôte (pare-feu, SSH, groupe <code>docker</code>)</td><td>Acceptable pour un portable utilisé sur place (option B), pas pour un serveur dédié</td><td>Pour l'option A : UFW, SSH par clés uniquement, utilisateur hors du groupe <code>docker</code>, remapping des UID</td></tr>
+    <tr><td>Accès distant au dashboard</td><td>Sans objet en option B : le dashboard est affiché directement sur le portable serveur</td><td>Avec un serveur dédié (Raspberry Pi, option A) : reverse proxy HTTPS devant le dashboard et l'API, accès d'administration par VPN uniquement</td></tr>
     <tr><td>Wi-Fi WPA2-PSK partagé</td><td>Qui connaît le mot de passe rejoint le réseau (le MQTT reste protégé)</td><td>WPA3, ou isolation des clients sur le hotspot</td></tr>
     <tr><td>Authentification du nœud par mot de passe</td><td>Mot de passe lisible dans la mémoire flash si l'ESP32 est volé</td><td>Certificat client par nœud (mTLS), chiffrement de la flash</td></tr>
     <tr><td>Clé d'accès dans l'URL du WebSocket et du flux vidéo</td><td>Les navigateurs ne permettent pas d'en-tête ; la clé est exclue des journaux</td><td>Jeton court à usage unique</td></tr>
@@ -542,7 +532,7 @@ docker compose up -d                  # puis hors ligne, sur le hotspot</code></
 
 <!-- ======================================================================= -->
 <section id="annexes">
-  <h1>13. Annexes</h1>
+  <h1>12. Annexes</h1>
   <h2>A. Dépôts</h2>
   <table>
     <tr><th>Dépôt</th><th>Contenu</th></tr>
@@ -565,8 +555,6 @@ docker compose up -d                  # puis hors ligne, sur le hotspot</code></
     <tr><td>jeton service</td><td>API</td><td>lecture et envoi d'alertes (IA)</td></tr>
   </table>
   <p>Tous les secrets sont dans <code>infra/.env</code>, <code>infra/config/mosquitto/passwd</code> (haché), <code>infra/certs/</code> et <code>firmware/include/secrets.h</code>, ignorés par git.</p>
-  <h2>C. Poster A3</h2>
-  <div class="a-completer">Poster A3 à joindre en annexe (à réaliser).</div>
 </section>
 
 </body>

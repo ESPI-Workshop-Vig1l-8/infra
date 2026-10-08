@@ -131,20 +131,19 @@ text(cx + 120, my + 118, "DO non connecté (seuil fixe).", 11, color="#546e7a")
 line(cx - 36, ao_y, cx, ao_y, NETS["GPIO34"])
 net(cx - 36, ao_y, "GPIO34", "end")
 
-# LED (GPIO → 220 Ω → anode, cathode → GND)
+# LED (GPIO → 10 kΩ → anode, cathode → GND)
 for i, (name, title, color) in enumerate([("GPIO25", "LED mouvement (suit le PIR)", "#ad1457"),
                                           ("GPIO26", "LED environnement (plafond local / alerte IA)", "#00838f")]):
     ly = 700 + i * 72
     text(cx - 250, ly - 22, title, 13, weight="bold")
     _, lw = net(cx - 250, ly, name)
     x0 = cx - 250 + lw
-    resistor_h(x0, x0 + 90, ly, "220 Ω*", NETS[name])
+    resistor_h(x0, x0 + 90, ly, "10 kΩ", NETS[name])
     led(x0 + 90, ly, color)
     line(x0 + 116, ly, x0 + 150, ly, NETS["GND"])
     net(x0 + 150, ly, "GND")
     text(x0 + 220, ly + 4, "fixe : plafond local · clignotante : alerte IA" if name == "GPIO26" else "allumée pendant une détection", 11, color="#546e7a")
 
-text(cx - 250, 830, "* 10 kΩ sur le prototype (seule valeur disponible) : LED peu lumineuses", 11, color="#546e7a", italic=True)
 
 svg = (f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {W} {H}" width="{W}" height="{H}" '
        f'font-family="DejaVu Sans, Arial, sans-serif">\n<rect width="{W}" height="{H}" fill="#ffffff"/>\n'
