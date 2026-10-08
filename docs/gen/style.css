@@ -77,3 +77,5 @@ figcaption { font-size: 8.4pt; color: var(--muted); margin-top: 1.5mm; }
 .toc ol { columns: 2; column-gap: 10mm; font-size: 9.4pt; }
 .toc a { color: var(--ink); text-decoration: none; }
 a { color: var(--accent); text-decoration: none; }
+
+.ai-note { font-size: 8.4pt; font-style: italic; color: var(--muted); margin: -1mm 0 3mm; text-align: left; }
