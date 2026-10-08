@@ -82,7 +82,7 @@
     <tr><td>IA</td><td>Vision MOG2 + YOLOv8n ; Isolation Forest entraîné sur les vraies mesures, détection en temps réel</td><td class="c"><span class="status s-ok">FAIT</span></td></tr>
     <tr><td>Sécurité</td><td>TLS, comptes et ACL par nœud, rôles API, conteneurs non root, secrets hors dépôt</td><td class="c"><span class="status s-ok">FAIT</span></td></tr>
     <tr><td>Exposition de l'hôte</td><td>MQTTS publié sur l'adresse du hotspot uniquement, dashboard sur la boucle locale, base non publiée (section 8.3)</td><td class="c"><span class="status s-ok">FAIT</span></td></tr>
-    <tr><td>Mesures réelles</td><td>Réseau ESP32 ↔ serveur 1 à 2 ms, pile complète ≈ 133 Mio de RAM, modèle entraîné sur 1 h de mesures en salle</td><td class="c"><span class="status s-ok">FAIT</span></td></tr>
+    <tr><td>Mesures réelles</td><td>Réseau ESP32 ↔ serveur 1 à 2 ms, pile complète ≈ 790 Mio de RAM, modèle entraîné sur 1 h de mesures en salle</td><td class="c"><span class="status s-ok">FAIT</span></td></tr>
   </table>
 </section>
 
@@ -267,7 +267,7 @@ docker compose up -d                  # puis hors ligne, sur le hotspot</code></
     <li><strong>Redémarrage automatique</strong> (<code>restart: unless-stopped</code>) et <strong>contrôles de santé</strong> (backend, dashboard).</li>
     <li><strong>Logs</strong> : Mosquitto écrit sur la sortie standard, rotation Docker 3 × 10 Mo ; pas de croissance illimitée des journaux MQTT.</li>
     <li><strong>Supervision</strong> : <code>GET /api/v1/health</code> (état MQTT et CouchDB, file d'écriture, messages rejetés), affiché dans le dashboard.</li>
-    <li><strong>Ressources</strong> : suivi par <code>docker stats</code> ; la pile complète utilise environ 133 Mio de RAM et quelques % de CPU (section 10).</li>
+    <li><strong>Ressources</strong> : suivi par <code>docker stats</code> ; la pile complète utilise moins de 800 Mio de RAM ; le CPU est surtout pris par la vision (section 10).</li>
   </ul>
 </section>
 
@@ -497,17 +497,22 @@ docker compose up -d                  # puis hors ligne, sur le hotspot</code></
     <tr><td>Vision, sur le PC de test (CPU, conteneur)</td><td>37 ms par image, 24,5 images/s (section 9.1)</td></tr>
     <tr><td>Entraînement de l'Isolation Forest</td><td>1 h de mesures réelles dans la salle</td></tr>
   </table>
-  <p>Consommation de la pile sur le PC Serveur Local (<code>docker stats</code>, 15,3 Gio de RAM) :</p>
+  <p>Consommation de la pile complète sur le PC Serveur Local, les deux IA comprises (<code>docker stats</code>, 15,3 Gio de RAM ; 100 % = un cœur de processeur) :</p>
   <table>
     <tr><th>Conteneur</th><th class="c">CPU</th><th class="c">Mémoire</th><th class="c">Processus</th></tr>
-    <tr><td><code>history-db</code> (CouchDB)</td><td class="c">2,15 %</td><td class="c">86,9 Mio</td><td class="c">79</td></tr>
-    <tr><td><code>ia-prediction</code></td><td class="c">0,00 %</td><td class="c">18,5 Mio</td><td class="c">31</td></tr>
-    <tr><td><code>dashboard</code> (nginx)</td><td class="c">0,00 %</td><td class="c">15,2 Mio</td><td class="c">17</td></tr>
-    <tr><td><code>backend</code> (Go)</td><td class="c">0,04 %</td><td class="c">10,2 Mio</td><td class="c">20</td></tr>
-    <tr><td><code>mqtt-broker</code> (Mosquitto)</td><td class="c">0,06 %</td><td class="c">2,1 Mio</td><td class="c">1</td></tr>
-    <tr><th>Total</th><th class="c">≈ 2,3 %</th><th class="c">≈ 133 Mio (0,85 %)</th><th class="c">148</th></tr>
+    <tr><td><code>ia-vision</code> (PyTorch, YOLOv8n)</td><td class="c">803 %</td><td class="c">471,1 Mio</td><td class="c">47</td></tr>
+    <tr><td><code>ia-prediction</code> (Isolation Forest)</td><td class="c">0,00 %</td><td class="c">181,9 Mio</td><td class="c">31</td></tr>
+    <tr><td><code>history-db</code> (CouchDB)</td><td class="c">1,33 %</td><td class="c">107,8 Mio</td><td class="c">79</td></tr>
+    <tr><td><code>dashboard</code> (nginx)</td><td class="c">0,00 %</td><td class="c">12,5 Mio</td><td class="c">17</td></tr>
+    <tr><td><code>mqtt-broker</code> (Mosquitto)</td><td class="c">0,02 %</td><td class="c">6,4 Mio</td><td class="c">1</td></tr>
+    <tr><td><code>backend</code> (Go)</td><td class="c">0,00 %</td><td class="c">5,9 Mio</td><td class="c">9</td></tr>
+    <tr><th>Total</th><th class="c">≈ 805 %</th><th class="c">≈ 786 Mio (5 %)</th><th class="c">184</th></tr>
   </table>
-  <p>La pile tient largement sur le portable : la base CouchDB est le seul poste notable. La vision (PyTorch) n'était pas lancée pendant ce relevé.</p>
+  <p>
+    La mémoire tient largement sur le portable (moins de 800 Mio pour toute la pile). Le processeur est presque entièrement pris par la
+    vision : PyTorch répartit l'analyse de chaque image sur tous les cœurs disponibles (environ 8 ici), alors que les autres services
+    restent sous 2 %. Lors d'un relevé précédent, sans la vision, la pile utilisait environ 2 % de CPU et 133 Mio de RAM.
+  </p>
 </section>
 
 
@@ -524,6 +529,7 @@ docker compose up -d                  # puis hors ligne, sur le hotspot</code></
     <tr><td>Dashboard en HTTP</td><td>Acceptable car limité à <code>127.0.0.1</code></td><td>HTTPS avec la CA locale si l'accès distant devient nécessaire</td></tr>
     <tr><td>MQ-2 branché sans pont diviseur</td><td>Sous gaz fort, AO peut dépasser 3,3 V : l'ADC sature vers 3,1 V et l'entrée de l'ESP32 n'est pas protégée</td><td>Pont diviseur 10 kΩ / 20 kΩ (facteur 1,5 dans le firmware), puis réentraînement de l'IA sur la nouvelle échelle</td></tr>
     <tr><td>MQ-2 non étalonné</td><td>Valeurs relatives (mV), pas de ppm</td><td>Étalonnage en air propre (R0), puis conversion par courbe</td></tr>
+    <tr><td>Vision gourmande en CPU</td><td>PyTorch occupe tous les cœurs du portable (≈ 800 %)</td><td>Limiter les threads de PyTorch (<code>torch.set_num_threads</code>) ou le CPU du conteneur (<code>cpus:</code> dans Compose), en vérifiant que la latence reste sous 100 ms</td></tr>
     <tr><td>Filtre de lumière de la vision</td><td>Une personne très proche (plus de 40 % de l'image) peut être ignorée</td><td>Ajuster le seuil, ou lancer YOLO périodiquement</td></tr>
     <tr><td>Modèle IA entraîné sur peu de données</td><td>Variations jour / nuit pas encore apprises</td><td>Collecter plusieurs jours, réentraîner régulièrement</td></tr>
     <tr><td>Dépôts publics</td><td>Choix lié au contexte scolaire (construction sans identifiants)</td><td>Dépôts privés et clé de déploiement en lecture seule</td></tr>
