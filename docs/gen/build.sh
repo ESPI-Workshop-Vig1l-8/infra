@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
-# Génère les diagrammes puis le PDF du rapport : docs/Workshop2026-M1-GXX-Dossier.pdf
+# Génère les diagrammes puis le PDF du rapport : docs/Workshop2026-M1-G04-Dossier.pdf
 # Prérequis : Docker, Python 3.   Usage : ./build.sh [numéro de groupe]
 set -euo pipefail
 cd "$(dirname "$0")"
-GROUPE="${1:-XX}"   # XX en attendant le numéro de groupe
+GROUPE="${1:-04}"
 IMAGE=minlag/mermaid-cli
 # docs/ est monté sur /data : sources dans /data/gen, PDF écrit dans /data
 RUN=(docker run --rm -u "$(id -u):$(id -g)" -v "$(cd .. && pwd):/data")
