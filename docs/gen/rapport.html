@@ -143,7 +143,7 @@
   </table>
   <figure class="wide">
     <img src="diagrammes/reseau.svg" alt="Schéma réseau de la table">
-    <figcaption>Figure 1 — Réseau de table : seul le port MQTTS 18883 est exposé au réseau ; le dashboard n'écoute que sur la boucle locale du serveur.</figcaption>
+    <figcaption>Figure 1 — Réseau de table : seul le port MQTTS 18883 est exposé au réseau ; le dashboard n'écoute que sur la boucle locale du serveur (option B : l'opérateur travaille sur le portable qui sert de serveur).</figcaption>
   </figure>
   <h2>3.2 Matrice des flux</h2>
   <table>
@@ -160,6 +160,7 @@
   <ul>
     <li><strong>Réseau de table</strong> : hotspot dédié du serveur (WPA2) ; aucun autre groupe ne partage ce réseau.</li>
     <li><strong>Surface exposée</strong> : un seul port sur le réseau (MQTTS 18883), protégé par TLS, mot de passe et ACL. Sur l'hôte, seul le dashboard est publié, et uniquement sur <code>127.0.0.1</code> : la base n'est joignable que depuis les conteneurs du backend et de l'IA. L'export CSV d'entraînement passe par l'API (le backend lit la base et sert le fichier).</li>
+    <li><strong>Dashboard sur la boucle locale</strong> : avec l'option B, le serveur est le portable personnel de l'opérateur, qui consulte le dashboard sur cette même machine. Le publier sur le réseau ne servirait à rien et exposerait une interface d'administration (commandes, acquittements, flux caméra) aux autres clients du hotspot. Avec un serveur dédié (option A), il serait publié sur un port du réseau privé d'administration, en HTTPS avec la CA locale, et filtré par le pare-feu. Accès ponctuel depuis un autre poste : tunnel SSH (<code>ssh -L 10443:127.0.0.1:10443 &lt;serveur&gt;</code>).</li>
     <li><strong>Ports non standard</strong> : MQTTS sur <code>18883</code> (au lieu de 8883) et dashboard sur <code>10443</code>. Les attaques automatisées (robots, scripts de scan rapides, vers) visent les ports par défaut des services courants (1883/8883 pour MQTT, 80/443/8080 pour le web, 5984 pour CouchDB) : décaler les ports les évite et réduit le bruit dans les journaux. C'est une mesure complémentaire, pas une protection en soi : un scan complet (<code>nmap -p-</code>) les retrouve, la sécurité repose sur TLS, l'authentification et les ACL.</li>
     <li><strong>Réseaux Docker par paire de services</strong> : chaque conteneur ne voit que les services dont il a besoin (section 5).</li>
     <li><span class="status s-plan">PRÉVU</span> Lier le port 18883 à l'adresse du hotspot (<code>192.168.10.1:18883</code>) plutôt qu'à toutes les interfaces : Docker contourne le pare-feu de l'hôte pour les ports publiés.</li>
