@@ -1,9 +1,9 @@
-/* Rapport d'ingénierie Sentinel-X — mise en page A4 pour l'impression PDF (Chromium) */
+/* Rapport d'ingénierie Sentinel-X - mise en page A4 pour l'impression PDF (Chromium) */
 
 @page {
   size: A4;
   margin: 18mm 16mm 20mm 16mm;
-  @bottom-left { content: "Sentinel-X — Rapport d'ingénierie technique"; font: 8pt "DejaVu Sans", Arial, sans-serif; color: #78909c; }
+  @bottom-left { content: "Sentinel-X - Rapport d'ingénierie technique"; font: 8pt "DejaVu Sans", Arial, sans-serif; color: #78909c; }
   @bottom-right { content: counter(page) " / " counter(pages); font: 8pt "DejaVu Sans", Arial, sans-serif; color: #78909c; }
 }
 @page :first {
@@ -57,7 +57,7 @@ figcaption { font-size: 8.4pt; color: var(--muted); margin-top: 1.5mm; }
 
 .note { border-left: 3px solid var(--accent); background: var(--accent-soft); padding: 2mm 3mm; margin: 2mm 0 4mm; break-inside: avoid; }
 .a-completer { border: 1.5px dashed #f0a020; background: #fff8eb; padding: 2.5mm 3mm; margin: 2mm 0 4mm; break-inside: avoid; }
-.a-completer::before { content: "À COMPLÉTER — "; font-weight: bold; color: var(--todo); font-size: 8pt; }
+.a-completer::before { content: "À COMPLÉTER - "; font-weight: bold; color: var(--todo); font-size: 8pt; }
 .tbd { background: #fff1d6; color: var(--todo); font-weight: bold; padding: 0 1mm; border-radius: 2px; }
 
 .kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 3mm; margin: 2mm 0 4mm; }
