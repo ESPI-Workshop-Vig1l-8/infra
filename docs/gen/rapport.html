@@ -83,7 +83,7 @@
     <tr><td>Backend / dashboard</td><td>Ingestion validée, API REST + WebSocket, historique, alertes, commandes, export CSV d'entraînement</td><td class="c"><span class="status s-ok">FAIT</span></td></tr>
     <tr><td>IA</td><td>Vision MOG2 + YOLOv8n ; Isolation Forest entraîné sur les vraies mesures, détection en temps réel</td><td class="c"><span class="status s-ok">FAIT</span></td></tr>
     <tr><td>Sécurité</td><td>TLS, comptes et ACL par nœud, rôles API, conteneurs non root, secrets hors dépôt</td><td class="c"><span class="status s-ok">FAIT</span></td></tr>
-    <tr><td>Durcissement hôte</td><td>Pare-feu, SSH par clés, isolation Docker sur le PC Serveur Local</td><td class="c"><span class="status s-plan">PRÉVU</span></td></tr>
+    <tr><td>Exposition de l'hôte</td><td>MQTTS publié sur l'adresse du hotspot uniquement, dashboard sur la boucle locale, base non publiée (section 8.3)</td><td class="c"><span class="status s-ok">FAIT</span></td></tr>
     <tr><td>Mesures réelles, pentest</td><td>Latences en démonstration, tests physiques, résultats du pentest croisé</td><td class="c"><span class="status s-todo">À COMPLÉTER</span></td></tr>
   </table>
 </section>
@@ -107,7 +107,7 @@
   <ul>
     <li><strong>Pourquoi</strong> : la pile a été développée et validée sur ce PC ; l'IA profite de son processeur (vision à 37 ms par image) ; aucun écart entre l'environnement de développement et celui de la démonstration.</li>
     <li><strong>Conséquence réseau</strong> : la carte Wi-Fi du portable est utilisée par le hotspot et ne peut pas être connectée à un autre réseau en même temps. Les images sont donc construites avec Internet <em>avant</em> la démonstration, puis la pile fonctionne hors ligne.</li>
-    <li><strong>Conséquence sécurité</strong> : le serveur est un poste personnel. Le durcissement (section 8.3) porte sur ce portable, et doit en plus protéger les données personnelles qu'il contient.</li>
+    <li><strong>Conséquence sécurité</strong> : le serveur est un poste personnel. La sécurité porte sur ce qui est exposé au réseau de table : un seul port, lié à l'adresse du hotspot (section 8.3).</li>
     <li><strong>Portabilité</strong> : les images restent compatibles <code>linux/arm64</code> ; un passage à l'option A (Raspberry Pi 5) resterait possible sans modifier la pile.</li>
   </ul>
   <h2>2.3 Écarts au matériel prévu</h2>
@@ -163,7 +163,7 @@
     <li><strong>Dashboard sur la boucle locale</strong> : avec l'option B, le serveur est le portable personnel de l'opérateur, qui consulte le dashboard sur cette même machine. Le publier sur le réseau ne servirait à rien et exposerait une interface d'administration (commandes, acquittements, flux caméra) aux autres clients du hotspot. Avec un serveur dédié (option A), il serait publié sur un port du réseau privé d'administration, en HTTPS avec la CA locale, et filtré par le pare-feu. Accès ponctuel depuis un autre poste : tunnel SSH (<code>ssh -L 10443:127.0.0.1:10443 &lt;serveur&gt;</code>).</li>
     <li><strong>Ports non standard</strong> : MQTTS sur <code>18883</code> (au lieu de 8883) et dashboard sur <code>10443</code>. Les attaques automatisées (robots, scripts de scan rapides, vers) visent les ports par défaut des services courants (1883/8883 pour MQTT, 80/443/8080 pour le web, 5984 pour CouchDB) : décaler les ports les évite et réduit le bruit dans les journaux. C'est une mesure complémentaire, pas une protection en soi : un scan complet (<code>nmap -p-</code>) les retrouve, la sécurité repose sur TLS, l'authentification et les ACL.</li>
     <li><strong>Réseaux Docker par paire de services</strong> : chaque conteneur ne voit que les services dont il a besoin (section 5).</li>
-    <li><span class="status s-plan">PRÉVU</span> Lier le port 18883 à l'adresse du hotspot (<code>192.168.10.1:18883</code>) plutôt qu'à toutes les interfaces : Docker contourne le pare-feu de l'hôte pour les ports publiés.</li>
+    <li><strong>Port lié au hotspot</strong> : 18883 est publié sur <code>192.168.10.1</code> uniquement, pas sur toutes les interfaces. Docker contourne le pare-feu de l'hôte pour les ports publiés : sans cette liaison, le broker serait joignable depuis le Wi-Fi de l'école ou l'Ethernet. Le hotspot doit donc être actif avant le démarrage de la pile.</li>
   </ul>
 </section>
 
@@ -232,7 +232,7 @@
   <h2>5.1 Services</h2>
   <table>
     <tr><th>Service</th><th>Image / technologie</th><th>Rôle</th><th>Utilisateur</th><th>Exposition</th></tr>
-    <tr><td><code>mqtt-broker</code></td><td>Mosquitto 2.1 (digest épinglé)</td><td>Broker MQTT : TLS 8883 pour les nœuds, 1883 interne</td><td>mosquitto (1883)</td><td>18883 → 8883</td></tr>
+    <tr><td><code>mqtt-broker</code></td><td>Mosquitto 2.1 (digest épinglé)</td><td>Broker MQTT : TLS 8883 pour les nœuds, 1883 interne</td><td>mosquitto (1883)</td><td>192.168.10.1:18883 → 8883</td></tr>
     <tr><td><code>history-db</code></td><td>CouchDB 3.5 (digest épinglé)</td><td>Base documentaire : <code>telemetry</code>, <code>events</code></td><td>couchdb (5984)</td><td>— (réseaux internes)</td></tr>
     <tr><td><code>history-db-init</code></td><td>CouchDB (curl)</td><td>Job au démarrage : bases, comptes, droits, vues</td><td>couchdb (5984)</td><td>—</td></tr>
     <tr><td><code>backend</code></td><td>Go 1.26, binaire statique</td><td>Ingestion MQTT, API REST, WebSocket</td><td>sentinel (10001)</td><td>—</td></tr>
@@ -359,37 +359,34 @@ docker compose up -d                  # puis hors ligne, sur le hotspot</code></
     <tr><td>Évasion de conteneur</td><td>Tous les services non root ; aucun conteneur privilégié ; seule la webcam est partagée</td><td class="c"><span class="status s-ok">FAIT</span></td></tr>
     <tr><td>Images compromises en amont</td><td>Images tierces épinglées par empreinte</td><td class="c"><span class="status s-ok">FAIT</span></td></tr>
     <tr><td>Attaques automatisées sur les ports par défaut</td><td>Ports non standard (MQTTS 18883, dashboard 10443) : hors de portée des scans et robots qui ne visent que les ports courants ; complément de TLS et de l'authentification</td><td class="c"><span class="status s-ok">FAIT</span></td></tr>
-    <tr><td>Ports inutiles ouverts sur l'hôte</td><td>UFW : tout refuser en entrée sauf 18883 depuis le hotspot (et SSH depuis le poste d'administration) ; port 18883 lié à <code>192.168.10.1</code></td><td class="c"><span class="status s-plan">PRÉVU</span></td></tr>
-    <tr><td>Accès SSH par mot de passe</td><td><code>PasswordAuthentication no</code>, <code>PermitRootLogin no</code>, clés uniquement</td><td class="c"><span class="status s-plan">PRÉVU</span></td></tr>
-    <tr><td>Privilèges du démon Docker</td><td>Pas d'utilisateur courant dans le groupe <code>docker</code> ; remapping des utilisateurs (<code>userns-remap</code>) ou Docker rootless</td><td class="c"><span class="status s-plan">PRÉVU</span></td></tr>
-    <tr><td>Données personnelles du portable</td><td>Session dédiée à la démonstration, disque chiffré, verrouillage de l'écran, aucun autre service réseau actif (partage de fichiers, etc.)</td><td class="c"><span class="status s-plan">PRÉVU</span></td></tr>
-    <tr><td>Mises à jour de l'hôte</td><td>Mises à jour de sécurité appliquées avant la semaine de démonstration</td><td class="c"><span class="status s-plan">PRÉVU</span></td></tr>
+    <tr><td>Port exposé sur d'autres réseaux</td><td>MQTTS publié sur l'adresse du hotspot (<code>192.168.10.1</code>) uniquement : injoignable depuis le Wi-Fi de l'école ou l'Ethernet</td><td class="c"><span class="status s-ok">FAIT</span></td></tr>
+    <tr><td>Accès distant à l'hôte</td><td>Aucun serveur SSH : le portable est administré sur place (section 8.3)</td><td class="c"><span class="status s-ok">FAIT</span></td></tr>
   </table>
-  <h2>8.3 Durcissement de l'hôte (PC Serveur Local)</h2>
+  <h2>8.3 Sécurité de l'hôte : périmètre retenu</h2>
   <p>
-    Avec l'option B, le durcissement s'applique directement au portable qui sert de serveur (Linux, NetworkManager, interface Wi-Fi
-    <code>wlp0s20f3</code> en hotspot). Le simuler dans un conteneur n'aurait pas de sens : pare-feu, SSH et démon Docker appartiennent au
-    système hôte, c'est lui qui est exposé au réseau de table et que les autres groupes attaqueront.
+    Le sujet prévoit un durcissement du système hôte (pare-feu, SSH par clés, privilèges du démon Docker), pensé pour un serveur dédié
+    administré à distance, comme le Raspberry Pi de l'option A. Avec l'option B, le serveur est le portable de l'opérateur, utilisé
+    sur place. Nous avons donc concentré la sécurité sur ce qui est réellement exposé : le réseau de table et le seul port publié.
   </p>
-  <ul>
-    <li><strong>Docker contourne UFW</strong> pour les ports publiés (règles iptables propres) : le port MQTTS est donc aussi lié à l'adresse du hotspot dans <code>docker-compose.yaml</code>, sinon il resterait joignable sur toutes les interfaces (réseau de l'école compris).</li>
-    <li><strong>SSH</strong> : l'administration se fait sur le portable lui-même ; si le serveur SSH est activé, c'est par clés uniquement et depuis une seule adresse.</li>
-    <li><strong>Démon Docker</strong> : être dans le groupe <code>docker</code> équivaut à être root ; les commandes Docker passent par <code>sudo</code>. Le remapping des utilisateurs isole en plus les UID des conteneurs de ceux de l'hôte (à activer avant de créer les volumes : il change leur emplacement).</li>
-  </ul>
-<pre><code># Pare-feu : tout refuser en entrée, sauf MQTTS depuis le hotspot (et SSH depuis le poste d'administration)
-sudo ufw default deny incoming && sudo ufw default allow outgoing
-sudo ufw allow in on wlp0s20f3 from 192.168.10.0/24 to any port 18883 proto tcp
-sudo ufw allow from &lt;poste d'administration&gt; to any port 22 proto tcp
-sudo ufw enable
-# docker-compose.yaml : "192.168.10.1:18883:8883" (Docker contourne UFW pour les ports publiés)
-
-# SSH : clés uniquement (/etc/ssh/sshd_config)
-PasswordAuthentication no
-PermitRootLogin no
-
-# Docker : remapping des utilisateurs (/etc/docker/daemon.json)
-{ "userns-remap": "default", "no-new-privileges": true }</code></pre>
-  <div class="a-completer">Captures ou sorties de commandes prouvant le durcissement du PC Serveur Local : <code>sudo ufw status verbose</code>, <code>sshd -T | grep -E "passwordauth|permitroot"</code>, <code>ss -ltnp</code>, <code>docker ps</code> avec les utilisateurs des conteneurs.</div>
+  <table>
+    <tr><th style="width:24%">Mesure du sujet</th><th>Choix pour l'option B et justification</th></tr>
+    <tr><td>Fermeture des ports non requis (UFW / iptables)</td><td>
+      La surface est réduite à la source plutôt que filtrée après coup. Un seul port est joignable depuis le réseau : MQTTS 18883, publié
+      <strong>uniquement sur l'adresse du hotspot</strong> (<code>192.168.10.1</code>), protégé par TLS, un compte par nœud et des ACL.
+      Le dashboard n'écoute que sur <code>127.0.0.1</code>, la base et l'API ne sont pas publiées. Un pare-feu UFW n'apporterait rien
+      de plus pour la pile : Docker contourne UFW pour les ports qu'il publie, c'est la liaison à l'adresse du hotspot qui fait foi.
+      Vérification : <code>ss -ltnp</code> ne montre que <code>192.168.10.1:18883</code> et <code>127.0.0.1:10443</code> pour la pile.</td></tr>
+    <tr><td>SSH par clés uniquement</td><td>
+      Non pertinent : le portable est administré directement par son utilisateur, aucun serveur SSH n'y est lancé. Sans service SSH,
+      il n'y a ni mot de passe à deviner ni clé à protéger. Pour un serveur dédié (option A), l'accès se ferait par clés uniquement.</td></tr>
+    <tr><td>Isolation des privilèges du démon Docker</td><td>
+      Traitée au niveau des conteneurs : tous les services tournent avec un utilisateur non root, aucun n'est privilégié, seule la webcam
+      est partagée, chaque réseau Docker ne relie qu'une paire de services. Retirer l'utilisateur du groupe <code>docker</code> ou activer
+      le remapping des UID protège contre un attaquant déjà connecté à la session du portable, ce qui sort du modèle de menace réseau
+      du pentest.</td></tr>
+    <tr><td>Réseau de table</td><td>
+      Hotspot dédié du portable (WPA2), sous-réseau isolé <code>192.168.10.0/24</code> : les autres groupes ne partagent pas ce réseau.</td></tr>
+  </table>
 </section>
 
 <!-- ======================================================================= -->
@@ -530,6 +527,7 @@ PermitRootLogin no
   <h1>12. Limites et améliorations</h1>
   <table>
     <tr><th>Limite</th><th>Conséquence</th><th>Amélioration</th></tr>
+    <tr><td>Pas de durcissement du système hôte (pare-feu, SSH, groupe <code>docker</code>)</td><td>Acceptable pour un portable utilisé sur place (option B), pas pour un serveur dédié</td><td>Pour l'option A : UFW, SSH par clés uniquement, utilisateur hors du groupe <code>docker</code>, remapping des UID</td></tr>
     <tr><td>Wi-Fi WPA2-PSK partagé</td><td>Qui connaît le mot de passe rejoint le réseau (le MQTT reste protégé)</td><td>WPA3, ou isolation des clients sur le hotspot</td></tr>
     <tr><td>Authentification du nœud par mot de passe</td><td>Mot de passe lisible dans la mémoire flash si l'ESP32 est volé</td><td>Certificat client par nœud (mTLS), chiffrement de la flash</td></tr>
     <tr><td>Clé d'accès dans l'URL du WebSocket et du flux vidéo</td><td>Les navigateurs ne permettent pas d'en-tête ; la clé est exclue des journaux</td><td>Jeton court à usage unique</td></tr>
